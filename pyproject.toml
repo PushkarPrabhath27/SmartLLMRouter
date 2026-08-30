@@ -28,6 +28,7 @@ dependencies = [
     "tiktoken>=0.5",
     "pydantic>=2.0",
     "httpx>=0.25",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
@@ -37,6 +38,7 @@ dev = [
     "pytest-cov>=4.1",
     "ruff>=0.4",
     "mypy>=1.8",
+    "types-PyYAML>=6.0",
 ]
 
 [project.urls]
