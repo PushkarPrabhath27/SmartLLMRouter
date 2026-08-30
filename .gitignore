@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Tooling caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# SmartRoute runtime artifacts (local DB, learned state)
+.smartroute/
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
