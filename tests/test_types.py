@@ -1,6 +1,7 @@
 """Unit tests for smartroute.types (Phase 1, module 1)."""
 
-from dataclasses import FrozenInstanceError
+import json
+from dataclasses import FrozenInstanceError, asdict
 from datetime import datetime, timezone
 
 import pytest
@@ -37,6 +38,19 @@ def _feature_vector(complexity_irrelevant: float = 0.0) -> FeatureVector:
         urgency_count=0,
         instruction_verb_density=0.1,
     )
+
+
+class TestFeatureVectorSerialization:
+    def test_feature_vector_serializes_to_json_without_ceremony(self) -> None:
+        """features_json storage path: plain dataclasses.asdict + json.dumps."""
+        as_dict = asdict(_feature_vector())
+        serialized = json.dumps(as_dict)
+        restored = json.loads(serialized)
+        expected_hint = {"domain": "code", "match_count": 3, "match_ratio": 0.2}
+        assert restored["domain_hint"] == expected_hint
+        nested = DomainHint(**restored["domain_hint"])
+        rebuilt = FeatureVector(**{**restored, "domain_hint": nested})
+        assert rebuilt == _feature_vector()
 
 
 def _classification(complexity: float) -> ClassificationResult:
@@ -88,9 +102,11 @@ class TestClassificationResult:
 
 
 class TestRoutingMeta:
-    def test_why_property_returns_reason(self) -> None:
+    def test_reason_is_the_only_explanation_field(self) -> None:
+        """Ruling on spec tension 04 vs 01: `reason` is canonical, no `why` alias."""
         meta = _meta()
-        assert meta.why == meta.reason == "Default routing: code task"
+        assert meta.reason == "Default routing: code task"
+        assert not hasattr(meta, "why")
 
     def test_routing_meta_is_frozen(self) -> None:
         meta = _meta()

@@ -133,9 +133,6 @@ class RoutingMeta:
         estimated_cost_usd: Pre-flight cost estimate for this call.
         latency_ms: Actual provider call latency in milliseconds.
         decision_id: UUID of the stored decision row (for signal reporting).
-
-    Properties:
-        why: Alias for ``reason`` (the documented quick-access name).
     """
 
     model: str
@@ -150,11 +147,6 @@ class RoutingMeta:
     estimated_cost_usd: float
     latency_ms: int
     decision_id: str
-
-    @property
-    def why(self) -> str:
-        """Human-readable explanation of the routing decision."""
-        return self.reason
 
 
 @dataclass(frozen=True)
