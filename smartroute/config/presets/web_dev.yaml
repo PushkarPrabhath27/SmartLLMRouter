@@ -1,0 +1,22 @@
+routing:
+  low_complexity: "groq"
+  medium_complexity: "openai"
+  high_complexity: "anthropic"
+
+  overrides:
+    - match: "refactor"
+      match_type: "contains"
+      model: "anthropic"
+      description: "Refactoring needs strong model"
+
+    - match: "debug"
+      match_type: "contains"
+      model: "anthropic"
+      description: "Debugging needs strong model"
+
+adaptation:
+  enabled: true
+  bump_threshold: 0.35
+  cooldown_minutes: 5
+  ema_alpha: 0.3
+  min_calls_before_bump: 10
