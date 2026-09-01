@@ -239,7 +239,15 @@ class TestPresetMerging:
 
 class TestProviderReplacement:
     def test_user_providers_replaced_not_merged_with_defaults(self, tmp_path: Path) -> None:
-        """Omitted default providers must not be resurrected from defaults."""
+        """INTENTIONAL CONTRACT: the user `providers` section replaces the
+        built-in defaults wholesale; omitted providers are NOT resurrected.
+
+        A user who configures only one provider must end up with exactly one
+        provider, or tier/override validation against "configured providers"
+        would silently accept providers the user deliberately removed. Do
+        not "fix" this by deep-merging providers; this test pins the approved
+        behavior (Phase 1 ruling #5).
+        """
         raw = {
             "providers": {"openai": {"api_key": "k-openai", "model": "gpt-4o-mini"}},
             "routing": {
@@ -249,7 +257,19 @@ class TestProviderReplacement:
             },
         }
         config = ConfigLoader(str(_write_config(tmp_path / "sr.yaml", raw))).load()
+        # A deep merge would have kept anthropic and groq from the defaults.
         assert set(config.providers) == {"openai"}
+
+        # Corollary: routing to a removed provider must now fail validation,
+        # proving the removed provider is truly gone.
+        bad = dict(raw)
+        bad["routing"] = {
+            "low_complexity": "openai",
+            "medium_complexity": "openai",
+            "high_complexity": "anthropic",
+        }
+        with pytest.raises(ConfigError, match="not configured"):
+            ConfigLoader(str(_write_config(tmp_path / "sr2.yaml", bad))).load()
 
     def test_user_provider_fields_deep_merge(self, tmp_path: Path) -> None:
         """Within one provider, partial user fields merge over the entry."""
