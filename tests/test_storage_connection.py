@@ -62,6 +62,16 @@ class TestLifecycle:
             await storage.store_decision(_decision())
         assert db_path.exists()
 
+    async def test_connect_failure_creating_directory_raises_storage_error(
+        self, tmp_path
+    ) -> None:
+        """A parent path that is a file makes mkdir fail -> StorageError."""
+        blocker = tmp_path / "blocker"
+        blocker.write_text("i am a file", encoding="utf-8")
+        storage = Storage(str(blocker / "db.sqlite"))
+        with pytest.raises(StorageError, match="directory"):
+            await storage.connect()
+
 
 class TestPragmas:
     async def test_wal_mode_enabled_on_file_database(self, tmp_path) -> None:
@@ -192,6 +202,13 @@ class TestProjectStats:
         assert stats["average_latency_ms"] == pytest.approx((303 + 50) / 4)
         assert len(stats["adapted_buckets"]) == 1
         assert len(stats["recent_decisions"]) == 4
+
+    async def test_stats_failure_raises_storage_error(self) -> None:
+        async with Storage(":memory:") as storage:
+            await storage.connection.execute("DROP TABLE decisions")
+            await storage.connection.commit()
+            with pytest.raises(StorageError):
+                await storage.get_project_stats()
 
     async def test_recent_decisions_capped_at_ten(self) -> None:
         async with Storage(":memory:") as storage:

@@ -57,7 +57,12 @@ class Storage:
         if self._connection is not None:
             raise StorageError("storage is already connected")
         if self.db_path != ":memory:":
-            Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
+            try:
+                Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
+            except OSError as exc:
+                raise StorageError(
+                    f"failed to create database directory for {self.db_path}: {exc}"
+                ) from exc
         try:
             conn = await aiosqlite.connect(self.db_path)
         except aiosqlite.Error as exc:

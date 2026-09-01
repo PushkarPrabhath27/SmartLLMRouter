@@ -177,6 +177,13 @@ class TestSearchPath:
         config = ConfigLoader(str(path)).load()
         assert config.adaptation.ema_alpha == 0.3
 
+    def test_non_mapping_provider_entry_rejected(self, tmp_path: Path) -> None:
+        raw = _full_user_config()
+        raw["providers"]["openai"] = "not-a-mapping"
+        path = _write_config(tmp_path / "sr.yaml", raw)
+        with pytest.raises(ConfigError, match="invalid configuration"):
+            ConfigLoader(str(path)).load()
+
     def test_validation_failure_wrapped_as_config_error(self, tmp_path: Path) -> None:
         raw = _full_user_config()
         raw["routing"]["overrides"] = [
