@@ -62,9 +62,7 @@ class TestLifecycle:
             await storage.store_decision(_decision())
         assert db_path.exists()
 
-    async def test_connect_failure_creating_directory_raises_storage_error(
-        self, tmp_path
-    ) -> None:
+    async def test_connect_failure_creating_directory_raises_storage_error(self, tmp_path) -> None:
         """A parent path that is a file makes mkdir fail -> StorageError."""
         blocker = tmp_path / "blocker"
         blocker.write_text("i am a file", encoding="utf-8")

@@ -80,9 +80,7 @@ class TestDecisionErrorPaths:
                 SignalRecord(decision_id="d", signal_type="acceptance", signal_value=0.05),
             )
 
-    async def test_get_signals_for_decision_failure(
-        self, bare_conn: aiosqlite.Connection
-    ) -> None:
+    async def test_get_signals_for_decision_failure(self, bare_conn: aiosqlite.Connection) -> None:
         with pytest.raises(StorageError):
             await get_signals_for_decision(bare_conn, "d1")
 
