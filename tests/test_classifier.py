@@ -128,18 +128,14 @@ class TestComputeConfidence:
 
 class TestClassify:
     def test_code_prompt_classified_as_code(self) -> None:
-        result = classify_prompt(
-            "Refactor this function in main.py to use async await properly"
-        )
+        result = classify_prompt("Refactor this function in main.py to use async await properly")
         assert result.task_type == TaskType.CODE
         assert 0.0 <= result.complexity <= 1.0
         assert 0.0 <= result.confidence <= 1.0
         assert result.features.token_count > 0
 
     def test_creative_prompt_classified_as_creative(self) -> None:
-        result = classify_prompt(
-            "Write a short story with a strong narrative and vivid characters"
-        )
+        result = classify_prompt("Write a short story with a strong narrative and vivid characters")
         assert result.task_type == TaskType.CREATIVE
 
     def test_translation_prompt_classified(self) -> None:
@@ -184,21 +180,15 @@ class TestFailOpen:
         assert result.features.token_count == 4  # "any prompt at all"
         assert any("fail-open" in record.message for record in caplog.records)
 
-    def test_real_tiktoken_failure_falls_open(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_real_tiktoken_failure_falls_open(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Break the real tiktoken path (not a mock of our own code)."""
         import tiktoken
 
         def broken_encoding_for_model(name: str) -> tiktoken.Encoding:
             raise KeyError(f"no encoding for {name}")
 
-        monkeypatch.setattr(
-            tiktoken, "encoding_for_model", broken_encoding_for_model
-        )
-        monkeypatch.setattr(
-            classifier_module, "_ENCODERS", {}, raising=False
-        )
+        monkeypatch.setattr(tiktoken, "encoding_for_model", broken_encoding_for_model)
+        monkeypatch.setattr(classifier_module, "_ENCODERS", {}, raising=False)
         # features.py holds its own cache reference; clear it via the module.
         import smartroute.classifier.features as features_module
 
@@ -211,8 +201,11 @@ class TestFailOpen:
     def test_fail_open_features_default_vector(self) -> None:
         result = classify_prompt("one two three four five")
         # Sanity: normal path does not produce the fail-open signature.
-        assert not (result.complexity == 0.5 and result.confidence == 0.3
-                    and result.task_type == TaskType.GENERAL)
+        assert not (
+            result.complexity == 0.5
+            and result.confidence == 0.3
+            and result.task_type == TaskType.GENERAL
+        )
 
 
 class TestMonotonicity:

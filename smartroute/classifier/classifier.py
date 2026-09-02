@@ -146,9 +146,7 @@ class HeuristicClassifier:
                 features=features,
             )
         except Exception as exc:  # noqa: BLE001 - fail-open is the spec contract
-            logger.warning(
-                "classification failed, using fail-open default: %s", exc
-            )
+            logger.warning("classification failed, using fail-open default: %s", exc)
             return ClassificationResult(
                 task_type=TaskType.GENERAL,
                 complexity=0.5,
