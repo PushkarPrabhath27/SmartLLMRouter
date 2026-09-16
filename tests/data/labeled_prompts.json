@@ -1,0 +1,252 @@
+[
+  {
+    "prompt": "Fix the stack trace in main.py",
+    "task_type": "code",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Debug this function and fix the syntax error in the module",
+    "task_type": "code",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Refactor the following function:\n```\ndef add(a, b):\n    return a + b\n```",
+    "task_type": "code",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Add a docstring to the class in models.py",
+    "task_type": "code",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "What does the import statement in app.py do?",
+    "task_type": "code",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Write a complete REST API endpoint in FastAPI that connects to a PostgreSQL database, validates request payloads with Pydantic, applies authentication middleware, returns proper error responses, and includes unit tests for every route; then configure the Docker deployment and finally document the API for the team.",
+    "task_type": "code",
+    "complexity_bucket": "medium"
+  },
+  {
+    "prompt": "Refactor the legacy order-processing module: extract the pricing logic into a separate service class, replace the raw SQL queries with an ORM repository, add unit tests for each service method, and update the integration tests to use the new interface.",
+    "task_type": "code",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Implement a thread-safe LRU cache in Python with configurable capacity, atomic operations, and comprehensive test coverage for concurrent access patterns; document the design trade-offs in the module docstring.",
+    "task_type": "code",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Debug why the production deployment is failing: review the Docker build logs, check the database migration status, inspect the environment variables in the Kubernetes config, trace the startup error in the application logs, and fix the broken import in the entrypoint module.",
+    "task_type": "code",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Write unit tests for the parser module covering unicode input, empty files, malformed JSON, and very large documents; then integrate the tests into the CI pipeline.",
+    "task_type": "code",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Step 1: profile the runtime performance of the data pipeline. Step 2: identify the three slowest database queries and rewrite them with proper indexes. Step 3: add benchmarks. Step 4: run the full regression suite. Step 5: write a summary of the improvements and open a pull request with the changes.",
+    "task_type": "code",
+    "complexity_bucket": "medium"
+  },
+  {
+    "prompt": "We need to migrate the entire authentication subsystem from sessions to JWT tokens. First audit every endpoint in the API for session usage, then design the token refresh strategy, implement the middleware, update the frontend client, add integration tests covering token expiry and revocation, and finally deploy behind a feature flag with a rollback plan in case the production error rate increases. Requirement 1: the implementation must preserve backward compatibility for every public entry point. Requirement 2: the implementation must add structured logging with correlation ids to each stage. Requirement 3: the implementation must handle unicode and empty-input edge cases explicitly. Requirement 4: the implementation must document each function with a rationale for the design choice. Requirement 5: the implementation must add retry logic with exponential backoff for transient failures. Requirement 6: the implementation must cover the new behavior with unit and integration tests. Requirement 7: the implementation must record latency and error metrics for every external call. Requirement 8: the implementation must guard against unbounded memory growth in long-running processes. Requirement 9: the implementation must make the configuration hot-reloadable without restarting. Requirement 10: the implementation must validate all inputs at the boundary and fail with clear errors. Requirement 11: the implementation must keep the diff reviewable and split the work into logical commits. Requirement 12: the implementation must coordinate the rollout behind a feature flag with monitoring. Requirement 13: the implementation must prepare a rollback plan and rehearse it before the cutover. Requirement 14: the implementation must benchmark before and after with a reproducible script. Requirement 15: the implementation must summarize the trade-offs in a short design document. Requirement 16: the implementation must get review sign-off from the platform and security teams. Requirement 17: the implementation must update the on-call runbook with the new failure modes. Requirement 18: the implementation must backfill the historical data with the migration script. Requirement 19: the implementation must verify the change against staging traffic for one full day. Requirement 20: the implementation must schedule the deployment for the weekly maintenance window. Requirement 21: the implementation must annotate every public constant with its unit and valid range. Requirement 22: the implementation must collapse duplicate helpers into one shared internal module. Requirement 23: the implementation must wire the new events into the existing audit trail. Requirement 24: the implementation must double-check the license compatibility of any new dependency.",
+    "task_type": "code",
+    "complexity_bucket": "medium"
+  },
+  {
+    "prompt": "Write a short poem about the ocean",
+    "task_type": "creative",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Brainstorm a tagline for our coffee brand",
+    "task_type": "creative",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Draft a friendly email inviting the team to Friday's offsite",
+    "task_type": "creative",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Give me a fun slogan for a bakery",
+    "task_type": "creative",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Write a 1500-word blog post about remote work culture: open with a personal narrative anecdote, develop three themed sections with a consistent tone, weave in a metaphor about sailing, and close with a call to action for the newsletter.",
+    "task_type": "creative",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Create the character profile, plot outline, and setting description for a mystery novel: the detective should have a distinctive voice, the plot needs three acts with a twist, and the dialogue style should feel noir without becoming parody.",
+    "task_type": "creative",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Develop the creative concept for an ad campaign across social media: write the hero tagline, a 30-second video script with dialogue, three tweet variants, and the marketing copy for the landing page, keeping one consistent brand tone throughout.",
+    "task_type": "creative",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Write the opening chapter of a literary fiction novel. Establish the setting with rich sensory detail, introduce the main character through action rather than exposition, plant a metaphor that will pay off in the final act, set the narrative tone, and end the chapter on a moment of dialogue that hints at the central conflict of the plot. Requirement 1: the implementation must preserve backward compatibility for every public entry point. Requirement 2: the implementation must add structured logging with correlation ids to each stage. Requirement 3: the implementation must handle unicode and empty-input edge cases explicitly. Requirement 4: the implementation must document each function with a rationale for the design choice. Requirement 5: the implementation must add retry logic with exponential backoff for transient failures. Requirement 6: the implementation must cover the new behavior with unit and integration tests. Requirement 7: the implementation must record latency and error metrics for every external call. Requirement 8: the implementation must guard against unbounded memory growth in long-running processes. Requirement 9: the implementation must make the configuration hot-reloadable without restarting. Requirement 10: the implementation must validate all inputs at the boundary and fail with clear errors. Requirement 11: the implementation must keep the diff reviewable and split the work into logical commits. Requirement 12: the implementation must coordinate the rollout behind a feature flag with monitoring. Requirement 13: the implementation must prepare a rollback plan and rehearse it before the cutover. Requirement 14: the implementation must benchmark before and after with a reproducible script. Requirement 15: the implementation must summarize the trade-offs in a short design document. Requirement 16: the implementation must get review sign-off from the platform and security teams. Requirement 17: the implementation must update the on-call runbook with the new failure modes. Requirement 18: the implementation must backfill the historical data with the migration script. Requirement 19: the implementation must verify the change against staging traffic for one full day. Requirement 20: the implementation must schedule the deployment for the weekly maintenance window. Requirement 21: the implementation must annotate every public constant with its unit and valid range. Requirement 22: the implementation must collapse duplicate helpers into one shared internal module. Requirement 23: the implementation must wire the new events into the existing audit trail. Requirement 24: the implementation must double-check the license compatibility of any new dependency.",
+    "task_type": "creative",
+    "complexity_bucket": "medium"
+  },
+  {
+    "prompt": "What is the difference between correlation and causation?",
+    "task_type": "reasoning",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Compare REST and GraphQL in one paragraph",
+    "task_type": "reasoning",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Is it rational to infer intent from tone in an email?",
+    "task_type": "reasoning",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Solve this puzzle: three switches, one lamp, one visit",
+    "task_type": "reasoning",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Analyze the trade-offs of microservices versus a monolith for our stage of growth: evaluate team size, deployment complexity, and operational cost, compare the evidence from companies at similar scale, and conclude with a recommendation we can defend to the board.",
+    "task_type": "reasoning",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "We must decide between three vendors. Assess each proposal against our framework: cost, reliability, and support. Compare the evidence, deduce which risks matter most, evaluate the long-term strategy fit, and explain the logic behind your final decision.",
+    "task_type": "reasoning",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "A factory has two machines. Machine A produces 60 units per hour with a 5% defect rate, machine B produces 40 units per hour with a 2% defect rate. Calculate the overall defect probability for mixed output, then optimize the production plan to maximize yield under a 500-unit deadline, showing the math for every step of the solution.",
+    "task_type": "reasoning",
+    "complexity_bucket": "medium"
+  },
+  {
+    "prompt": "Build a strategic plan for entering the European market. First analyze the competitive landscape and customer evidence, then evaluate the regulatory framework, model three pricing scenarios with probability-weighted outcomes, assess the operational risks, and conclude with a phased hypothesis-driven roadmap the leadership team can ratify.",
+    "task_type": "reasoning",
+    "complexity_bucket": "medium"
+  },
+  {
+    "prompt": "Summarize this article in two sentences",
+    "task_type": "summarization",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Give me the TL;DR of this meeting transcript",
+    "task_type": "summarization",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Extract the key points from the attached memo",
+    "task_type": "summarization",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Condense the quarterly report into an executive summary: distill the main ideas into five bullet points, keep the overview under one page, highlight the financial risks, and end with a brief recap of the decisions the board must make.",
+    "task_type": "summarization",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Summarize the following 40-page research paper: provide an abstract-style overview, extract the methodology and key findings, condense the statistics section, shorten the discussion to its central claims, and finish with the practical implications for practitioners.",
+    "task_type": "summarization",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Create a complete digest of this legal deposition for the paralegal team: first a one-paragraph overview, then a bulleted extraction of every admission and contradiction, a highlight list of statements to follow up on, and finally a short executive summary the senior partners can read before the mediation session.",
+    "task_type": "summarization",
+    "complexity_bucket": "medium"
+  },
+  {
+    "prompt": "Translate 'good morning' to Japanese",
+    "task_type": "translation",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "How do you say 'thank you' in Spanish?",
+    "task_type": "translation",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Translate this sentence into German",
+    "task_type": "translation",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Translate the product description from English to French, then adapt the marketing tone for a Japanese audience, and check that the Portuguese version keeps the brand voice consistent across every language variant.",
+    "task_type": "translation",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Localize the application interface strings into eight languages: Spanish, French, German, Chinese, Japanese, Korean, Portuguese, and Italian. Preserve placeholder tokens, keep button labels short, and flag any string where the translation would break the layout in the target language.",
+    "task_type": "translation",
+    "complexity_bucket": "medium"
+  },
+  {
+    "prompt": "Translate this 20-page technical manual from English to Chinese and Japanese: maintain the glossary of engineering terms consistently across both languages, convert the measurement units where local convention requires it, review every diagram caption, and produce a translator's note documenting any phrase that required adaptation rather than literal translation.",
+    "task_type": "translation",
+    "complexity_bucket": "medium"
+  },
+  {
+    "prompt": "Hi",
+    "task_type": "general",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "What's the weather like today?",
+    "task_type": "general",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Tell me a fun fact",
+    "task_type": "general",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Thanks!",
+    "task_type": "general",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "What should I have for dinner?",
+    "task_type": "general",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "What are some good habits for staying productive while working from home, and why do they work?",
+    "task_type": "general",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Explain how a four-day work week might affect team morale, client coverage, and operating costs, and what a company should measure during a trial period.",
+    "task_type": "general",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "I'm planning a two-week trip to Portugal with my parents and my dog. Suggest an itinerary that balances city sightseeing with countryside downtime, note which restaurants accommodate dogs, and flag anything elderly travelers might find difficult.",
+    "task_type": "general",
+    "complexity_bucket": "low"
+  },
+  {
+    "prompt": "Help me think through whether to accept a job offer at a startup: compare the compensation against my current role, evaluate the equity risk, consider the career growth and the team, and lay out what evidence I should gather before deciding by the end of next week.",
+    "task_type": "general",
+    "complexity_bucket": "medium"
+  },
+  {
+    "prompt": "My team is struggling with our weekly meeting rhythm. Write a proposal for a new meeting structure: start with the problems we observed (status updates that run long, decisions made without the right people, action items nobody tracks), then design a cadence with a daily standup, a weekly decision meeting, and a monthly retrospective, define the agenda and decision rules for each, explain how to handle conflicts between the formats, and include a rollback plan if the new rhythm makes things worse after one month. Requirement 1: the implementation must preserve backward compatibility for every public entry point. Requirement 2: the implementation must add structured logging with correlation ids to each stage. Requirement 3: the implementation must handle unicode and empty-input edge cases explicitly. Requirement 4: the implementation must document each function with a rationale for the design choice. Requirement 5: the implementation must add retry logic with exponential backoff for transient failures. Requirement 6: the implementation must cover the new behavior with unit and integration tests. Requirement 7: the implementation must record latency and error metrics for every external call. Requirement 8: the implementation must guard against unbounded memory growth in long-running processes. Requirement 9: the implementation must make the configuration hot-reloadable without restarting. Requirement 10: the implementation must validate all inputs at the boundary and fail with clear errors. Requirement 11: the implementation must keep the diff reviewable and split the work into logical commits. Requirement 12: the implementation must coordinate the rollout behind a feature flag with monitoring. Requirement 13: the implementation must prepare a rollback plan and rehearse it before the cutover. Requirement 14: the implementation must benchmark before and after with a reproducible script. Requirement 15: the implementation must summarize the trade-offs in a short design document. Requirement 16: the implementation must get review sign-off from the platform and security teams. Requirement 17: the implementation must update the on-call runbook with the new failure modes. Requirement 18: the implementation must backfill the historical data with the migration script. Requirement 19: the implementation must verify the change against staging traffic for one full day. Requirement 20: the implementation must schedule the deployment for the weekly maintenance window. Requirement 21: the implementation must annotate every public constant with its unit and valid range. Requirement 22: the implementation must collapse duplicate helpers into one shared internal module. Requirement 23: the implementation must wire the new events into the existing audit trail. Requirement 24: the implementation must double-check the license compatibility of any new dependency.",
+    "task_type": "general",
+    "complexity_bucket": "high"
+  }
+]
