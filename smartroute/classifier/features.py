@@ -273,13 +273,16 @@ def _count_tokens(encoder: tiktoken.Encoding, prompt: str) -> int:
     return len(encoder.encode(prompt))
 
 
-def _code_block_ratio(encoder: tiktoken.Encoding, prompt: str) -> float:
-    """Fraction of tokens inside fenced code blocks (F2)."""
-    total = len(encoder.encode(prompt))
-    if total == 0:
+def _code_block_ratio(encoder: tiktoken.Encoding, prompt: str, total_tokens: int) -> float:
+    """Fraction of tokens inside fenced code blocks (F2).
+
+    Takes the already-computed total token count so the full prompt is
+    encoded exactly once per classification (spec 05 performance budget).
+    """
+    if total_tokens == 0 or "```" not in prompt:
         return 0.0
     inside = sum(len(encoder.encode(block)) for block in _FENCED_BLOCK.findall(prompt))
-    return min(inside / total, 1.0)
+    return min(inside / total_tokens, 1.0)
 
 
 def _is_question(prompt: str) -> bool:
@@ -312,14 +315,16 @@ def _ambiguity_score(prompt: str, total_words: int) -> float:
 
 def _file_path_count(prompt: str) -> int:
     """Count unique file path references across all patterns (F7)."""
+    if "." not in prompt and "/" not in prompt and "\\" not in prompt:
+        return 0
     references: set[str] = set()
-    for pattern in (
-        _EXT_FILE_PATTERN,
-        _WINDOWS_PATH_PATTERN,
-        _POSIX_PATH_PATTERN,
-        _KNOWN_DIR_PATTERN,
-    ):
-        references.update(match.group(0) for match in pattern.finditer(prompt))
+    if "." in prompt:
+        references.update(match.group(0) for match in _EXT_FILE_PATTERN.finditer(prompt))
+    if "\\" in prompt:
+        references.update(match.group(0) for match in _WINDOWS_PATH_PATTERN.finditer(prompt))
+    if "/" in prompt:
+        references.update(match.group(0) for match in _POSIX_PATH_PATTERN.finditer(prompt))
+        references.update(match.group(0) for match in _KNOWN_DIR_PATTERN.finditer(prompt))
     return len(references)
 
 
@@ -356,7 +361,7 @@ def extract_features(prompt: str) -> FeatureVector:
     domain_hint: DomainHint = best_domain_match(prompt, total_words)
     return FeatureVector(
         token_count=token_count,
-        code_block_ratio=_code_block_ratio(encoder, prompt),
+        code_block_ratio=_code_block_ratio(encoder, prompt, token_count),
         is_question=_is_question(prompt),
         is_instruction=bool(instruction_matches),
         instruction_verb_count=len(instruction_matches),
