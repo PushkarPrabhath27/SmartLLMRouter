@@ -1,0 +1,15 @@
+preset: "web_dev"
+providers:
+  openai:
+    api_key: "${OPENAI_API_KEY}"
+    model: "gpt-4o-mini"
+  anthropic:
+    api_key: "${ANTHROPIC_API_KEY}"
+    model: "claude-3-sonnet"
+  groq:
+    api_key: "${GROQ_API_KEY}"
+    model: "llama-3.1-8b"
+routing:
+  low_complexity: "groq"
+  medium_complexity: "openai"
+  high_complexity: "anthropic"

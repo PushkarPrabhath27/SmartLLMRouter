@@ -63,6 +63,8 @@ class ProviderDispatcher:
             providers: Optional explicit map of provider instances (useful for testing).
         """
         self.config = config
+        self.last_stream_provider: str | None = None
+        self.last_stream_model: str | None = None
         if providers is not None:
             self._providers = dict(providers)
         else:
@@ -202,6 +204,8 @@ class ProviderDispatcher:
                 continue
 
             # Stream initialized successfully; yield first chunk and stream the rest
+            self.last_stream_provider = provider_key
+            self.last_stream_model = model
             yield first_chunk
             async for chunk in stream_gen:
                 yield chunk

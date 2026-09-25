@@ -3,8 +3,44 @@
 SmartRoute classifies LLM prompts by task type and complexity, routes them to the
 optimal model tier, and learns from implicit user feedback to improve routing
 decisions per project over time. All learning happens in a local SQLite file.
-
-Public API exports arrive with the Router implementation (Phase 6).
 """
 
+from __future__ import annotations
+
+from smartroute.exceptions import (
+    ClassificationError,
+    ConfigError,
+    ProviderError,
+    SmartRouteError,
+    StorageError,
+)
+from smartroute.router import Router
+from smartroute.types import (
+    ClassificationResult,
+    ComplexityBucket,
+    ConversationContext,
+    ProjectReport,
+    RoutingMeta,
+    RoutingResult,
+    StreamChunk,
+    TaskType,
+)
+
 __version__ = "0.1.0"
+
+__all__ = [
+    "ClassificationError",
+    "ClassificationResult",
+    "ComplexityBucket",
+    "ConfigError",
+    "ConversationContext",
+    "ProjectReport",
+    "ProviderError",
+    "Router",
+    "RoutingMeta",
+    "RoutingResult",
+    "SmartRouteError",
+    "StorageError",
+    "StreamChunk",
+    "TaskType",
+]
