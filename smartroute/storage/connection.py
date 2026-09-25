@@ -134,6 +134,10 @@ class Storage:
         """Store a decision, returning its id (spec 08)."""
         return await decisions_crud.store_decision(self.connection, decision)
 
+    async def get_decision(self, decision_id: str) -> DecisionRecord | None:
+        """Fetch a single decision by its ID (spec 08)."""
+        return await decisions_crud.get_decision(self.connection, decision_id)
+
     async def get_recent_decisions(self, limit: int = 10) -> list[DecisionRecord]:
         """Return the most recent decisions, newest first (spec 08)."""
         return await decisions_crud.get_recent_decisions(self.connection, limit)

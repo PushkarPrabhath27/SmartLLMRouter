@@ -124,6 +124,31 @@ async def store_decision(conn: aiosqlite.Connection, decision: DecisionRecord) -
     return decision.id
 
 
+async def get_decision(conn: aiosqlite.Connection, decision_id: str) -> DecisionRecord | None:
+    """Fetch a single decision by its ID.
+
+    Args:
+        conn: Open aiosqlite connection.
+        decision_id: The UUID of the decision.
+
+    Returns:
+        The DecisionRecord or None if not found.
+
+    Raises:
+        StorageError: If the query fails.
+    """
+    try:
+        async with conn.execute(
+            f"SELECT {_DECISION_COLUMNS} FROM decisions WHERE id = ?",
+            (decision_id,),
+        ) as cursor:
+            row = await cursor.fetchone()
+    except aiosqlite.Error as exc:
+        logger.warning("get_decision failed: %s", exc)
+        raise StorageError(f"failed to fetch decision {decision_id}: {exc}") from exc
+    return _decision_from_row(row) if row is not None else None
+
+
 async def get_recent_decisions(conn: aiosqlite.Connection, limit: int = 10) -> list[DecisionRecord]:
     """Return the most recent decisions, newest first.
 
