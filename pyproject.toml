@@ -54,7 +54,7 @@ target-version = "py310"
 src = ["smartroute", "tests"]
 # specs/ is frozen ground-truth documentation; its embedded code snippets are
 # illustrative and must not be reformatted.
-extend-exclude = ["specs"]
+extend-exclude = ["specs", ".agents", ".opencode"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM"]
