@@ -22,6 +22,17 @@ htmlcov/
 
 # SmartRoute runtime artifacts (local DB, learned state)
 .smartroute/
+*.sqlite
+*.db
+
+# Environment variables & local secrets
+.env
+.env.*
+!.env.example
+
+# Scratch scripts
+run_live_*.py
+scratch_*.py
 
 # Editors / OS
 .idea/
