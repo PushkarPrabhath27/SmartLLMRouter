@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "smartroute"
+name = "smartroute-ai"
 version = "0.1.0"
 description = "Local-first, embeddable LLM prompt router with per-project adaptive learning."
 readme = "README.md"
@@ -47,6 +47,15 @@ Repository = "https://github.com/PushkarPrabhath27/SmartLLMRouter"
 
 [tool.hatch.build.targets.wheel]
 packages = ["smartroute"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/smartroute",
+    "/tests",
+    "/LICENSE",
+    "/README.md",
+    "/pyproject.toml",
+]
 
 [tool.ruff]
 line-length = 100

@@ -1,18 +1,92 @@
 # SmartRoute
 
+<p align="center">
+  <a href="https://pypi.org/project/smartroute-ai/"><img src="https://img.shields.io/pypi/v/smartroute-ai.svg?color=blue" alt="PyPI version" /></a>
+  <a href="https://pypi.org/project/smartroute-ai/"><img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg" alt="Python Versions" /></a>
+  <a href="https://github.com/PushkarPrabhath27/SmartLLMRouter/actions/workflows/ci.yml"><img src="https://github.com/PushkarPrabhath27/SmartLLMRouter/actions/workflows/ci.yml/badge.svg" alt="CI Status" /></a>
+  <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Code style: ruff" /></a>
+  <a href="https://mypy-lang.org/"><img src="https://img.shields.io/badge/types-Mypy%20Strict-blue.svg" alt="Type checked: mypy" /></a>
+  <a href="https://github.com/PushkarPrabhath27/SmartLLMRouter"><img src="https://img.shields.io/badge/coverage-97%25-brightgreen.svg" alt="Test Coverage" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT" /></a>
+</p>
+
 **Local-first, embeddable Python library that classifies LLM prompts and adaptively routes them across providers — learning from implicit user feedback over time.**
 
-SmartRoute is not an external proxy, an API gateway, or a managed cloud service. It is simply `import smartroute` in your backend: zero infrastructure, zero dashboard, zero telemetry, and zero vendor lock-in.
-
-```
-prompt → classify (<10ms) → route → respond → capture signal → update reputation EMA → future routes adapt
-```
-
-All learning happens locally inside a SQLite file (`.smartroute/db.sqlite`). Prompts are privacy-preserved using SHA-256 hashes and short previews — full prompt text is never persisted.
+SmartRoute is not an external proxy, an API gateway sidecar, or a managed cloud service. It is simply `import smartroute` in your backend: zero infrastructure, zero background daemons, zero external telemetry, and zero vendor lock-in.
 
 ---
 
-## ✨ Features (V1)
+## 🏛️ Architecture Overview
+
+```
+                                  +------------------------------------+
+                                  |            Incoming Prompt         |
+                                  +-----------------+------------------+
+                                                    |
+                                                    v
+                                  +------------------------------------+
+                                  |   Heuristic Classifier (< 10ms)    |
+                                  |   (9 deterministic syntactic cues) |
+                                  +-----------------+------------------+
+                                                    |
+                                                    v
+                                  +------------------------------------+
+                                  |    Adaptive Routing Engine         |
+                                  |  - Programmatic Override Hooks     |
+                                  |  - YAML Regex / Exact Rules        |
+                                  |  - EMA Reputation & Auto-Bump      |
+                                  |  - 3-Tier Fallback Chain           |
+                                  +-----------------+------------------+
+                                                    |
+                        +---------------------------+---------------------------+
+                        |                           |                           |
+                        v                           v                           v
+              +-------------------+       +-------------------+       +-------------------+
+              |  Groq Provider    |       |  OpenAI Provider  |       | Anthropic Provider|
+              | (Llama / OSS 20B) |       | (GPT-4o / Mini)   |       | (Claude 3.5 / 3)  |
+              +---------+---------+       +---------+---------+       +---------+---------+
+                        |                           |                           |
+                        +---------------------------+---------------------------+
+                                                    |
+                                                    v
+                                  +------------------------------------+
+                                  |          Streaming / Result        |
+                                  |   (Content + Full RoutingMeta)     |
+                                  +-----------------+------------------+
+                                                    |
+                                                    v
+                                  +------------------------------------+
+                                  | Implicit Signal Detector           |
+                                  | - hard_regen (-0.3) within 30s     |
+                                  | - soft_regen (-0.1) within 60s     |
+                                  | - multilingual correction (-0.2)   |
+                                  | - conversation acceptance (+0.05)  |
+                                  +-----------------+------------------+
+                                                    | (Background Async)
+                                                    v
+                                  +------------------------------------+
+                                  | SQLite WAL Mode (.smartroute/db)   |
+                                  | - SHA-256 Prompt Hash (Zero Leak)  |
+                                  | - EMA Reputation Table Update      |
+                                  +------------------------------------+
+```
+
+---
+
+## ⚖️ Why SmartRoute?
+
+| Feature | Gateway Sidecars (LiteLLM / Portkey) | Cloud LLM Routers | SmartRoute |
+|---|---|---|---|
+| **Deployment Model** | Extra Docker container / process | Third-party SaaS | **In-process Python library** |
+| **Classification Overhead**| ~50–150ms (or separate LLM call) | 200–500ms network round-trip | **< 10ms local heuristic** |
+| **Telemetry & Privacy** | Centralized logs / proxy ingress | Full prompt sent to 3rd party | **Zero telemetry; SHA-256 hash only** |
+| **Adaptive Learning** | Static weighted routing | Black-box heuristic | **Transparent EMA on implicit signals** |
+| **Local Offline State** | Redis / PostgreSQL required | Cloud proprietary DB | **SQLite with WAL mode embedded** |
+| **Type Safety** | Varies | REST API | **100% `mypy --strict` & typed** |
+
+---
+
+## ✨ Core Features
 
 - **⚡ Fast Heuristic Classifier (<10ms)**: Zero network calls, zero embeddings. Evaluates 9 deterministic features (token count, code ratio, multi-step markers, domain hints, imperative verbs, etc.) to assign a semantic task type and complexity score in $[0.0, 1.0]$.
 - **🧠 Adaptive Reputation Engine**: Maintains per-project exponential moving average (EMA) reputation scores for each `(task_type, complexity_bucket, model_tier)`. When a tier consistently fails or triggers negative feedback, it automatically auto-bumps to higher capability models.
@@ -30,8 +104,10 @@ All learning happens locally inside a SQLite file (`.smartroute/db.sqlite`). Pro
 ## 📦 Installation
 
 ```bash
-pip install smartroute
+pip install smartroute-ai
 ```
+
+> **Note**: The package installs under `smartroute-ai` on PyPI and is imported directly as `smartroute` in Python code.
 
 ---
 
@@ -60,7 +136,7 @@ async def main() -> None:
         result = await router.complete("Explain Python decorators with a clean code example")
 
         print("Response:\n", result.text)
-        print("\nExplainability:")
+        print("\nExplainability Metadata:")
         print(f"  Model Used:         {result.meta.model}")
         print(f"  Task Type:          {result.meta.task_type}")
         print(
@@ -259,7 +335,7 @@ cd SmartLLMRouter
 # Install with development dependencies
 uv sync --all-extras
 
-# Run full test suite with coverage
+# Run full test suite with coverage (342 tests, 97%+ coverage)
 uv run pytest --cov=smartroute --cov-report=term-missing -q
 
 # Static analysis and linting

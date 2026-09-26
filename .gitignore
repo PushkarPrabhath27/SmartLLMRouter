@@ -28,3 +28,10 @@ htmlcov/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Agent & CLI metadata
+.agents/
+.opencode/
+brag-output*/
+skills-lock.json
+uv.lock
