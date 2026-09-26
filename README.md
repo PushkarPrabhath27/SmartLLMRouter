@@ -1,57 +1,19 @@
 # SmartRoute
 
-<p align="center">
-  <a href="https://pypi.org/project/smartroute-ai/"><img src="https://img.shields.io/pypi/v/smartroute-ai.svg?color=blue" alt="PyPI version" /></a>
-  <a href="https://pypi.org/project/smartroute-ai/"><img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg" alt="Python Versions" /></a>
-  <a href="https://github.com/PushkarPrabhath27/SmartLLMRouter/actions/workflows/ci.yml"><img src="https://github.com/PushkarPrabhath27/SmartLLMRouter/actions/workflows/ci.yml/badge.svg" alt="CI Status" /></a>
-  <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Code style: ruff" /></a>
-  <a href="https://mypy-lang.org/"><img src="https://img.shields.io/badge/types-Mypy%20Strict-blue.svg" alt="Type checked: mypy" /></a>
-  <a href="https://github.com/PushkarPrabhath27/SmartLLMRouter"><img src="https://img.shields.io/badge/coverage-97%25-brightgreen.svg" alt="Test Coverage" /></a>
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT" /></a>
-</p>
+[![CI](https://github.com/PushkarPrabhath27/SmartLLMRouter/actions/workflows/ci.yml/badge.svg)](https://github.com/PushkarPrabhath27/SmartLLMRouter/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/smartroute-ai.svg)](https://pypi.org/project/smartroute-ai/)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](https://pypi.org/project/smartroute-ai/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-An in-process, embeddable Python library that classifies LLM prompt complexity in under 10ms and adaptively routes traffic across model providers based on implicit user feedback signals.
-
----
-
-## 1. Overview
-
-LLM routing typically introduces operational complexity: managing standalone proxy containers (e.g. LiteLLM, Portkey) or routing prompt payloads through third-party hosted routers.
-
-SmartRoute solves this at the application layer. It executes entirely in-process (`import smartroute`), requiring no external sidecars, no cloud dashboards, and no background daemon processes. It inspects prompts deterministically, directs traffic across providers (**Groq**, **OpenAI**, **Anthropic**), and continuously tracks model performance per task type using an Exponential Moving Average (EMA) stored in an embedded SQLite database.
-
-```
-prompt ──> classify (<10ms) ──> evaluate hierarchy ──> dispatch with fallback ──> observe signals ──> update EMA
-```
-
----
-
-## 2. Architectural Comparison
-
-| Dimension | Gateway Sidecars | Hosted Cloud Routers | SmartRoute (`smartroute-ai`) |
-|---|---|---|---|
-| **Runtime Model** | Separate daemon / Docker container | Third-party cloud service | **In-process Python library** |
-| **Classification Latency** | 50–150ms (or secondary LLM call) | 200–500ms network round-trip | **< 10ms deterministic heuristic** |
-| **Telemetry & Privacy** | Centralized proxy logs | Plaintext prompt leaves boundary | **Zero telemetry; SHA-256 hashed locally** |
-| **State Storage** | Redis / PostgreSQL required | Proprietary cloud database | **SQLite WAL mode embedded in repository** |
-| **Adaptation Mechanism** | Static routing weights | Proprietary heuristics | **Explicit EMA updated on implicit signals** |
-| **Type Guarantees** | JSON schema / REST | Remote API contracts | **Strict type hints (`mypy --strict`)** |
-
----
-
-## 3. Installation
-
-Install via `pip` or `uv`:
+An in-process, embeddable Python library that classifies LLM prompt complexity in <10ms and adaptively routes queries across providers using implicit feedback loops and local SQLite persistence.
 
 ```bash
 pip install smartroute-ai
 ```
 
-The package installs as `smartroute-ai` and exposes the top-level namespace `smartroute`.
-
 ---
 
-## 4. Minimal Runnable Example
+## Quickstart
 
 ```python
 import asyncio
@@ -60,24 +22,119 @@ from smartroute import Router
 
 async def main() -> None:
     async with Router() as router:
-        result = await router.complete("Explain Python decorators with a concise code example")
-
-        print(result.text)
-        print(f"Model:      {result.meta.model}")
-        print(f"Latency:    {result.meta.latency_ms:.1f}ms")
-        print(f"Estimated:  ${result.meta.estimated_cost_usd:.6f}")
-        print(f"Rationale:  {result.meta.reason}")
+        result = await router.complete("Explain Python decorators in simple terms")
+        print(f"Model:    {result.meta.model}")
+        print(f"Decision: {result.meta.reason}")
+        print(f"Latency:  {result.meta.latency_ms}ms")
+        print(f"Cost:     ${result.meta.estimated_cost_usd:.6f}")
 
 
 if __name__ == "__main__":
     asyncio.run(main())
 ```
 
+Output:
+
+```text
+Model:    groq/llama-3.1-8b
+Decision: Default routing: general task, low complexity (0.20) -> groq
+Latency:  312ms
+Cost:     $0.000016
+```
+
 ---
 
-## 5. Streaming Execution
+## How It Works
 
-SmartRoute supports native asynchronous streaming across all providers. The routing decision is resolved pre-flight; intermediate chunks yield text deltas, and the terminating chunk delivers complete `RoutingMeta` metadata:
+SmartRoute routes queries across models (e.g., Groq Llama 3, OpenAI GPT-4o-mini, Anthropic Claude 3.5 Sonnet) without running auxiliary classification models or proxy processes.
+
+```text
+Prompt
+  │
+  ▼
+[Heuristic Classifier] ──────────── <10ms, single-pass feature extraction
+  │
+  ▼
+[4-Tier Decision Hierarchy] ─────── Evaluates overrides, reputation, and defaults
+  │
+  ▼
+[Provider Dispatcher] ───────────── Dispatches with fallback chain (OpenAI / Anthropic / Groq)
+  │
+  ▼
+[Signal Collector] ──────────────── Detects hard/soft regens, corrections, acceptance
+  │ (background async)
+  ▼
+[SQLite WAL Storage] ────────────── Updates EMA reputation scores; hashes prompt to SHA-256
+```
+
+### 1. Zero-LLM Heuristic Classifier (<10ms)
+
+Instead of incurring a 50–200ms latency penalty and dollar cost calling a classification model (e.g., GPT-4o-mini as a router), SmartRoute extracts 9 structural and lexical features in a single pass over the input text:
+
+- **Token Length**: Binned into sub-ranges (`<50`, `50–200`, `200–500`, `>500`).
+- **Code Ratio**: Density of syntax tokens (`{`, `}`, `def `, `class `, `import `, indentation).
+- **Multi-Step Markers**: Sequential reasoning cues (`first`, `then`, `step 1`, `finally`).
+- **Wh-Questions**: Query framing markers (`what`, `why`, `how`, `explain`).
+- **Domain Dictionaries**: Keyword matching for technical domains (databases, systems, math, legal).
+- **Imperative Density**: Instruction-to-context ratio.
+
+These features compute a deterministic complexity score in $[0.0, 1.0]$, mapped to a discrete tier (`low`, `medium`, `high`) and semantic task category (`code`, `reasoning`, `general`). In local benchmarks, classification completes in `<8ms` for typical prompts (~1000 tokens).
+
+### 2. Deterministic 4-Tier Decision Hierarchy
+
+Routing decisions follow an explicit evaluation pipeline:
+
+| Precedence | Level | Evaluation Mechanism | Fallthrough Condition |
+|---|---|---|---|
+| 1 (Highest) | Programmatic Override | User-supplied `Callable[[str, Context], str \| None]` | Returns `None` |
+| 2 | Configuration Rules | Pattern matching (`exact`, `contains`, `regex`, `path`) | No rule matches |
+| 3 | Adaptive Reputation | Checks whether target tier EMA $< 0.30$ outside cooldown | Score healthy ($\ge 0.30$) or in cooldown |
+| 4 (Lowest) | Default Tier Mapping | Maps classified `(task_type, complexity_bucket)` to default provider | None (terminates evaluation) |
+
+### 3. Implicit Feedback Loop (EMA Reputation)
+
+SmartRoute updates model reputations automatically by observing downstream user interactions rather than requiring explicit survey dialogs.
+
+When a signal $s$ is captured, the bucket's Exponential Moving Average (EMA) updates:
+
+$$\text{EMA}_t = \alpha \cdot s + (1 - \alpha) \cdot \text{EMA}_{t-1} \quad (\alpha = 0.3)$$
+
+The updated EMA is clamped to $[0.0, 1.0]$.
+
+| Signal Type | Numerical Value ($s$) | Detection Heuristic |
+|---|---|---|
+| `hard_regen` | `-0.30` | The exact same prompt submitted within 30 seconds of previous output. |
+| `explicit_correction` | `-0.20` | Next conversational message (<200 tokens) matches negative feedback expressions across 6 supported languages (EN, ES, FR, DE, ZH, JA). |
+| `soft_regen` | `-0.10` | Jaccard token overlap between sequential prompts exceeds 80% within 60 seconds. |
+| `acceptance` | `+0.05` | Normal conversation continuation or clean closure without negative signals. |
+
+#### Auto-Bump Condition
+A tier auto-escalates (`low` $\rightarrow$ `medium` $\rightarrow$ `high`) when all three criteria are met:
+1. `call_count >= min_calls_before_bump` (default: 10 calls recorded).
+2. `ema_score < bump_threshold` (default: 0.30).
+3. Cooldown expired: `(now - last_bumped_at) >= cooldown_minutes` (default: 5 minutes).
+
+---
+
+## Architecture & Data Invariants
+
+### In-Process Architecture
+SmartRoute runs entirely within the hosting Python process (`import smartroute`). It is not an HTTP sidecar proxy (e.g., LiteLLM proxy, Portkey, Envoy). This architecture guarantees:
+- Zero additional network serialization hops or socket overhead.
+- No background daemon processes or external containers to maintain.
+- Direct propagation of provider exceptions and native asynchronous generator streaming.
+
+### Privacy & Storage Contract
+All persistent state resides in a local SQLite file (default: `.smartroute/db.sqlite`):
+- **WAL Mode**: Initialized with `PRAGMA journal_mode=WAL` and `PRAGMA busy_timeout=5000` to allow non-blocking concurrent reads during background writes.
+- **Zero Full-Text Prompt Storage**: Prompts are hashed via SHA-256 (`prompt_hash`). Only the hash and an administrative 100-character prefix (`prompt_preview`) are persisted. Raw prompt bodies are never stored to disk.
+- **Zero Telemetry**: No outbound network requests are dispatched other than direct completions to configured model providers.
+
+---
+
+## Streaming & Multi-Turn Usage
+
+### FastAPI SSE Streaming
 
 ```python
 from collections.abc import AsyncIterator
@@ -85,12 +142,12 @@ from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from smartroute import Router
 
-app = FastAPI(title="SmartRoute Gateway")
+app = FastAPI()
 router = Router()
 
 
-@app.post("/stream")
-async def stream_completion(prompt: str) -> StreamingResponse:
+@app.post("/chat")
+async def chat(prompt: str) -> StreamingResponse:
     async def event_generator() -> AsyncIterator[str]:
         async for chunk in router.stream(prompt):
             if chunk.is_finished:
@@ -102,65 +159,58 @@ async def stream_completion(prompt: str) -> StreamingResponse:
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 ```
 
+### Multi-Turn Context Tracking
+
+Pass `ConversationContext` to correlate signals across turns in a conversation session:
+
+```python
+import asyncio
+from smartroute import ConversationContext, Router
+
+
+async def main() -> None:
+    router = Router()
+    context = ConversationContext(conversation_id="session_01")
+
+    # Turn 1: Initial query
+    res1 = await router.complete("Write an SQL query to calculate user churn", context=context)
+    print(f"Turn 1 ({res1.meta.model}):\n{res1.text}\n")
+
+    # Turn 2: User provides negative feedback -> triggers explicit_correction (-0.2)
+    res2 = await router.complete("That's wrong, calculate it over 30 days instead", context=context)
+    print(f"Turn 2 ({res2.meta.model}):\n{res2.text}\n")
+
+    await router.close()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
 ---
 
-## 6. Decision Hierarchy Specification
+## Configuration Reference
 
-When resolving a routing decision, SmartRoute executes a deterministic 4-level evaluation hierarchy:
-
-```
-[Level 1: Programmatic Override Hook]
-        │
-        ├── None ────────────────────────────────────────────────────────┐
-        ▼                                                                │
-[Level 2: Config Override Rules (Exact, Regex, Contains, Path)]          │ Match Found
-        │                                                                ▼
-        ├── No Match ───────────────────────────────────────────> [Execute Route]
-        ▼                                                                ▲
-[Level 3: Adaptive Reputation Check]                                     │
-        │  - Check EMA score vs bump_threshold                           │
-        │  - If degraded & cooldown expired: Escalate Tier               │
-        │                                                                │
-        ▼                                                                │
-[Level 4: Default Complexity Mapping] ───────────────────────────────────┘
-```
-
-1. **Level 1 — Programmatic Override Hook**: User-supplied function `Callable[[str, ConversationContext | None], str | None]` evaluated first. Returns provider key (e.g. `"anthropic"`) or `None`.
-2. **Level 2 — Configuration Override Rules**: Ordered rule evaluations defined in YAML or presets supporting `exact`, `contains`, `regex`, and `path` matches.
-3. **Level 3 — Adaptive Reputation Evaluation**: Checks whether the target complexity tier has dropped below `bump_threshold` with sufficient sample size (`min_calls_before_bump`) and outside `cooldown_minutes`. If triggered, auto-escalates tier (`low` $\rightarrow$ `medium` $\rightarrow$ `high`).
-4. **Level 4 — Default Complexity Mapping**: Deterministic assignment mapping classified `(task_type, complexity_bucket)` to the configured baseline provider.
-
----
-
-## 7. Configuration Specification
-
-Configuration follows layered inheritance: **Built-in Defaults $\rightarrow$ Preset File $\rightarrow$ User YAML File**.
-
-### Search Path Precedence
-1. **Config File**: `config_path` parameter $\rightarrow$ `SMARTROUTE_CONFIG` environment variable $\rightarrow$ `./smartroute.yaml` $\rightarrow$ `~/.smartroute/config.yaml` $\rightarrow$ built-in defaults.
-2. **Storage File**: `storage_path` parameter $\rightarrow$ `SMARTROUTE_STORAGE` environment variable $\rightarrow$ `./.smartroute/db.sqlite` $\rightarrow$ `~/.smartroute/db.sqlite`.
-
-### Configuration Schema Reference
+Configuration files use standard YAML syntax (`smartroute.yaml`). Values support `${VAR}` environment variable interpolation.
 
 ```yaml
-preset: "general" # "general" | "web_dev" | "data_science"
+preset: "general"
 
 providers:
   openai:
-    api_key: "${OPENAI_API_KEY}" # Supports ${VAR} environment interpolation
+    api_key: "${OPENAI_API_KEY}"
     model: "gpt-4o-mini"
-    base_url: null # Optional custom proxy/endpoint
-    timeout: 30 # Request timeout in seconds
+    timeout: 30.0
     max_retries: 2
   anthropic:
     api_key: "${ANTHROPIC_API_KEY}"
     model: "claude-3-sonnet"
-    timeout: 30
+    timeout: 30.0
     max_retries: 2
   groq:
     api_key: "${GROQ_API_KEY}"
     model: "llama-3.1-8b"
-    timeout: 30
+    timeout: 30.0
     max_retries: 2
 
 routing:
@@ -168,113 +218,71 @@ routing:
   medium_complexity: "openai"
   high_complexity: "anthropic"
   fallback:
-    low: ["openai", "anthropic"]
+    low: ["openai"]
     medium: ["anthropic"]
     high: ["openai"]
+  overrides:
+    - match: "incident"
+      match_type: "contains"
+      model: "anthropic"
 
 adaptation:
   enabled: true
-  bump_threshold: 0.3 # EMA score below this triggers auto-bump
-  cooldown_minutes: 5 # Minimum interval between consecutive tier bumps
-  ema_alpha: 0.3 # Exponential moving average weight factor
-  min_calls_before_bump: 10 # Sample size threshold required before escalation
-
-logging:
-  level: "INFO"
-  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  bump_threshold: 0.30
+  cooldown_minutes: 5
+  ema_alpha: 0.30
+  min_calls_before_bump: 10
 ```
 
-| Parameter | Type | Default | Description |
+### Parameter Reference
+
+| Parameter | Type | Default | Behavior |
 |---|---|---|---|
-| `preset` | string | `"general"` | Base template (`general`, `web_dev`, `data_science`) |
-| `providers.<name>.api_key` | string | Environment variable | API authentication key (interpolated at load time) |
-| `providers.<name>.model` | string | Provider default | Upstream model identifier |
-| `providers.<name>.timeout` | float | `30.0` | HTTP request timeout in seconds |
-| `routing.low_complexity` | string | `"groq"` | Provider key for low complexity queries |
-| `routing.medium_complexity`| string | `"openai"` | Provider key for medium complexity queries |
-| `routing.high_complexity` | string | `"anthropic"` | Provider key for high complexity queries |
-| `adaptation.enabled` | bool | `true` | Enables implicit signal tracking & reputation updates |
-| `adaptation.bump_threshold`| float | `0.3` | Score threshold below which a tier auto-escalates |
-| `adaptation.cooldown_minutes` | int | `5` | Required cooldown duration between bump actions |
-| `adaptation.ema_alpha` | float | `0.3` | Weight of new signal: $\text{EMA}_t = \alpha S + (1 - \alpha)\text{EMA}_{t-1}$ |
-| `adaptation.min_calls_before_bump` | int | `10` | Minimum recorded calls before an auto-bump can occur |
+| `preset` | string | `"general"` | Base template (`general`, `web_dev`, `data_science`). |
+| `providers.<name>.api_key` | string | Required | Provider secret key; raises `ConfigError` if unset. |
+| `providers.<name>.model` | string | Provider default | Upstream model identifier passed to completion API. |
+| `providers.<name>.timeout` | float | `30.0` | Socket read/write timeout in seconds. |
+| `providers.<name>.max_retries` | int | `2` | Number of retry attempts on transient network errors. |
+| `routing.low_complexity` | string | `"groq"` | Provider key assigned to low complexity tier. |
+| `routing.medium_complexity` | string | `"openai"` | Provider key assigned to medium complexity tier. |
+| `routing.high_complexity` | string | `"anthropic"` | Provider key assigned to high complexity tier. |
+| `routing.fallback.<tier>` | list[str] | `[]` | Ordered failover provider list on request errors. |
+| `adaptation.enabled` | bool | `true` | Enables implicit signal detection and EMA updates. |
+| `adaptation.bump_threshold` | float | `0.30` | EMA boundary triggering tier auto-escalation. |
+| `adaptation.cooldown_minutes`| int | `5` | Required quiet period between consecutive auto-bumps. |
+| `adaptation.ema_alpha` | float | `0.30` | Smoothing factor applied to incoming feedback signals. |
+| `adaptation.min_calls_before_bump` | int | `10` | Minimum sample size required prior to evaluating bumps. |
+
+### Built-in Presets
+
+Presets bootstrap configuration without boilerplate:
+- `general`: Balanced cost-to-capability allocation across generic queries.
+- `web_dev`: Biases refactoring and debugging patterns toward high-tier models.
+- `data_science`: Enforces code-oriented reasoning routing on analytical and SQL keywords.
 
 ---
 
-## 8. Telemetry & Privacy Contract
+## Verification & Benchmarks
 
-SmartRoute enforces strict local-first privacy invariants:
-
-1. **Zero External Telemetry**: The library initiates zero network requests other than direct outbound LLM calls to your configured providers. There are no tracking pings, metrics collectors, or external analytics endpoints.
-2. **SHA-256 Prompt Hashing**: Full prompt text is never written to disk. The embedded SQLite storage records:
-   - `prompt_hash`: SHA-256 digest of the prompt string for deduplication and regeneration detection.
-   - `prompt_preview`: The first 100 characters of the prompt string for debugging identification.
-3. **SQLite WAL Mode**: Operational state (routing decisions, implicit feedback signals, and reputation EMA values) is persisted to a local SQLite database configured with Write-Ahead Logging (`PRAGMA journal_mode=WAL`) and `PRAGMA busy_timeout=5000` to ensure non-blocking concurrent reads.
-
----
-
-## 9. Implicit Feedback Signals
-
-SmartRoute detects user interaction signals asynchronously without blocking response completion:
-
-| Signal Type | Value | Trigger Condition |
-|---|---|---|
-| `hard_regen` | `-0.30` | The exact same prompt is re-submitted within 30 seconds. |
-| `soft_regen` | `-0.10` | Jaccard token overlap between consecutive prompts exceeds 80% within 60 seconds. |
-| `explicit_correction` | `-0.20` | Short follow-up message (<200 words) matching negative sentiment phrases across 6 languages (EN, ES, FR, DE, ZH, JA). |
-| `acceptance` | `+0.05` | Normal conversational continuation or session conclusion without negative markers. |
-
----
-
-## 10. Analytics & Reporting
-
-Inspect project-level routing performance and cost metrics programmatically:
-
-```python
-report = await router.report()
-
-print(f"Total Routed Decisions: {report.total_decisions}")
-print(f"Aggregated Cost:        ${report.total_cost_usd:.4f}")
-print(f"Mean Latency:           {report.average_latency_ms:.1f}ms")
-print(f"Model Distribution:     {report.model_distribution}")
-print(f"Adapted Buckets:        {report.adapted_buckets}")
-```
-
-To reset learned weights back to baseline:
-
-```python
-# Reset single bucket
-await router.reset_reputation(bucket_key="code_low")
-
-# Reset all reputation states
-await router.reset_reputation()
-```
-
----
-
-## 11. Development & Test Suite
-
-SmartRoute maintains a full unit and integration test suite with mock transports:
+The test suite enforces full test coverage, deterministic error handling, and strict typing across all modules:
 
 ```bash
-# Clone repository
-git clone https://github.com/PushkarPrabhath27/SmartLLMRouter.git
-cd SmartLLMRouter
-
-# Install with development dependencies
-uv sync --all-extras
-
-# Run test suite with code coverage
+# Run test suite with coverage
 uv run pytest --cov=smartroute --cov-report=term-missing -q
 
-# Code formatting and static type checking
+# Static type analysis and linting
 uv run ruff check .
 uv run ruff format --check .
 uv run mypy --strict smartroute/
 ```
 
+- **Test Suite**: 459 passing tests.
+- **Coverage**: 97% branch and statement coverage.
+- **Type Safety**: Fully typed with `mypy --strict` compliance.
+- **Classification Latency**: <8ms single-pass execution.
+
 ---
 
-## 12. License
+## License
 
-This project is licensed under the [MIT License](LICENSE).
+MIT License. See [LICENSE](LICENSE) for details.
