@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartRoute — In-Process Adaptive LLM Prompt Router</title>
+  
+  <!-- Modern Typography (Inter & JetBrains Mono) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-dark">
+
+  <!-- Top Application Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="brand-lockup">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">SmartRoute</span>
+          <span class="brand-badge">v0.1.0</span>
+        </div>
+      </div>
+      <div class="status-indicator">
+        <span class="pulse-dot"></span>
+        <span class="status-text">SQLite WAL Active (In-Process)</span>
+      </div>
+    </div>
+
+    <!-- Live System Telemetry Banner -->
+    <div class="header-stats">
+      <div class="stat-item">
+        <span class="stat-label">Total Decisions</span>
+        <span class="stat-val" id="stat-total-decisions">--</span>
+      </div>
+      <div class="stat-separator"></div>
+      <div class="stat-item">
+        <span class="stat-label">Mean Overhead</span>
+        <span class="stat-val stat-highlight" id="stat-mean-overhead">< 8ms</span>
+      </div>
+      <div class="stat-separator"></div>
+      <div class="stat-item">
+        <span class="stat-label">Cost Baseline</span>
+        <span class="stat-val" id="stat-cost-saved">$0.0000</span>
+      </div>
+      <div class="stat-separator"></div>
+      <div class="stat-item">
+        <button id="btn-refresh-stats" class="btn-icon" title="Sync live SQLite stats">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace Layout -->
+  <main class="workspace-grid">
+
+    <!-- Column 1: Input Control & Benchmark Scenarios (Left) -->
+    <section class="panel panel-input">
+      <div class="panel-header">
+        <div class="panel-title-group">
+          <h2 class="panel-title">Prompt Workbench</h2>
+          <span class="panel-subtitle">Benchmark queries & trigger controls</span>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <!-- Preset Scenario Selector -->
+        <div class="control-group">
+          <label class="control-label">Curated Test Scenarios (Click to Load)</label>
+          <div class="scenario-chips">
+            <button class="chip active" data-scenario="general">
+              <span class="chip-dot dot-low"></span>
+              <span class="chip-text">General (Low)</span>
+            </button>
+            <button class="chip" data-scenario="code">
+              <span class="chip-dot dot-medium"></span>
+              <span class="chip-text">Algorithm (Code)</span>
+            </button>
+            <button class="chip" data-scenario="reasoning">
+              <span class="chip-dot dot-high"></span>
+              <span class="chip-text">Multi-Step Math</span>
+            </button>
+            <button class="chip" data-scenario="override">
+              <span class="chip-dot dot-override"></span>
+              <span class="chip-text">Incident Override</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Prompt Textarea -->
+        <div class="control-group">
+          <div class="label-row">
+            <label for="prompt-input" class="control-label">Query Prompt</label>
+            <span class="char-counter" id="char-counter">0 chars | ~0 tokens</span>
+          </div>
+          <textarea id="prompt-input" rows="5" class="prompt-textarea" placeholder="Type prompt to evaluate routing..."></textarea>
+        </div>
+
+        <!-- Simulation Controls / Modifiers -->
+        <div class="control-group simulation-toggles">
+          <label class="control-label">Routing Modifiers (Presentation Flags)</label>
+          <div class="toggle-row">
+            <label class="checkbox-label">
+              <input type="checkbox" id="toggle-simulate-hook">
+              <span class="checkbox-custom"></span>
+              <span>Level 1: Force Programmatic Override</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Primary Actions -->
+        <div class="action-bar">
+          <button id="btn-dispatch" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <span>Dispatch Route</span>
+          </button>
+          <button id="btn-clear" class="btn btn-secondary">Clear</button>
+        </div>
+
+        <!-- Real-time Feedback Injection for Professor Demonstration -->
+        <div class="feedback-simulator-card">
+          <div class="simulator-header">
+            <span class="simulator-title">Adaptive Feedback Simulation</span>
+            <span class="badge-subtle">EMA Learning</span>
+          </div>
+          <p class="simulator-desc">
+            Simulate downstream user behavior to observe live SQLite EMA reputation updates:
+          </p>
+          <div class="feedback-btn-grid">
+            <button id="btn-sim-hard-regen" class="btn-signal btn-signal-danger" title="Simulates same prompt re-sent within 30s">
+              <span class="signal-tag">-0.30</span>
+              <span>Rapid Regen</span>
+            </button>
+            <button id="btn-sim-correction" class="btn-signal btn-signal-warning" title="Simulates follow-up correction: 'that is incorrect'">
+              <span class="signal-tag">-0.20</span>
+              <span>Explicit Correction</span>
+            </button>
+            <button id="btn-sim-acceptance" class="btn-signal btn-signal-success" title="Simulates normal conversational progression">
+              <span class="signal-tag">+0.05</span>
+              <span>Acceptance</span>
+            </button>
+          </div>
+          <div id="feedback-alert" class="feedback-alert hidden"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Column 2: Live Execution Pipeline & Response (Center) -->
+    <section class="panel panel-pipeline">
+      <div class="panel-header">
+        <div class="panel-title-group">
+          <h2 class="panel-title">Under-the-Hood Pipeline</h2>
+          <span class="panel-subtitle">Real-time stage execution & model dispatch</span>
+        </div>
+        <div class="header-tag-group">
+          <span id="pipeline-status-badge" class="badge badge-idle">System Ready</span>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <!-- 4-Stage Visual Pipeline Stepper -->
+        <div class="pipeline-stepper">
+          
+          <!-- Stage 1 -->
+          <div class="pipeline-step" id="step-classify">
+            <div class="step-indicator">
+              <span class="step-num">1</span>
+              <span class="step-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                </svg>
+              </span>
+            </div>
+            <div class="step-content">
+              <div class="step-header">
+                <span class="step-name">Heuristic Classifier</span>
+                <span class="step-duration" id="duration-classify">-- ms</span>
+              </div>
+              <span class="step-detail" id="detail-classify">9 deterministic syntactic features</span>
+            </div>
+          </div>
+
+          <div class="step-connector"></div>
+
+          <!-- Stage 2 -->
+          <div class="pipeline-step" id="step-engine">
+            <div class="step-indicator">
+              <span class="step-num">2</span>
+              <span class="step-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                  <polyline points="2 17 12 22 22 17"></polyline>
+                  <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+              </span>
+            </div>
+            <div class="step-content">
+              <div class="step-header">
+                <span class="step-name">Hierarchy Resolution</span>
+                <span class="step-duration" id="duration-engine">-- ms</span>
+              </div>
+              <span class="step-detail" id="detail-engine">Override &gt; Rules &gt; EMA &gt; Tier</span>
+            </div>
+          </div>
+
+          <div class="step-connector"></div>
+
+          <!-- Stage 3 -->
+          <div class="pipeline-step" id="step-dispatch">
+            <div class="step-indicator">
+              <span class="step-num">3</span>
+              <span class="step-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 14 14"></polyline>
+                </svg>
+              </span>
+            </div>
+            <div class="step-content">
+              <div class="step-header">
+                <span class="step-name">Provider Dispatch</span>
+                <span class="step-duration" id="duration-dispatch">-- ms</span>
+              </div>
+              <span class="step-detail" id="detail-dispatch">Target provider execution</span>
+            </div>
+          </div>
+
+          <div class="step-connector"></div>
+
+          <!-- Stage 4 -->
+          <div class="pipeline-step" id="step-storage">
+            <div class="step-indicator">
+              <span class="step-num">4</span>
+              <span class="step-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+              </span>
+            </div>
+            <div class="step-content">
+              <div class="step-header">
+                <span class="step-name">Local State & Hash</span>
+                <span class="step-duration" id="duration-storage">-- ms</span>
+              </div>
+              <span class="step-detail" id="detail-storage">SHA-256 prompt hash & WAL record</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Active Routing Decision Card -->
+        <div class="decision-meta-card">
+          <div class="meta-row">
+            <div class="meta-item">
+              <span class="meta-label">Selected Model</span>
+              <span class="meta-value model-badge" id="meta-model-used">None</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Task Type</span>
+              <span class="meta-value" id="meta-task-type">--</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Complexity Score</span>
+              <span class="meta-value" id="meta-complexity">--</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Total Latency</span>
+              <span class="meta-value" id="meta-latency">-- ms</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Estimated Cost</span>
+              <span class="meta-value" id="meta-cost">$0.000000</span>
+            </div>
+          </div>
+          <div class="rationale-banner">
+            <span class="rationale-prefix">Decision Rationale:</span>
+            <span class="rationale-text" id="meta-reason">Submit a query to inspect deterministic routing explanation.</span>
+          </div>
+        </div>
+
+        <!-- Model Output Viewer -->
+        <div class="response-container">
+          <div class="response-header">
+            <span class="response-title">Model Response Stream</span>
+            <button id="btn-copy-response" class="btn-text">Copy Response</button>
+          </div>
+          <div class="response-body" id="response-content">
+            <div class="placeholder-text">
+              Ready for prompt execution. Click any scenario on the left or type a custom prompt to trigger the in-process router.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Column 3: Live System Inspection Tabs (Right) -->
+    <section class="panel panel-inspect">
+      <div class="panel-header">
+        <div class="panel-tabs">
+          <button class="tab-btn active" data-tab="features">Feature Vector</button>
+          <button class="tab-btn" data-tab="reputation">Reputation EMA</button>
+          <button class="tab-btn" data-tab="privacy">Privacy Audit (DB)</button>
+          <button class="tab-btn" data-tab="terminal">Live Logs</button>
+        </div>
+      </div>
+
+      <div class="panel-body">
+
+        <!-- Tab 1: Feature Vector Gauges -->
+        <div class="tab-content active" id="tab-features">
+          <div class="tab-intro">
+            Deterministic feature vector computed in <code>&lt; 10ms</code> prior to network dispatch:
+          </div>
+          <div class="feature-metrics-grid">
+            <div class="metric-card">
+              <span class="metric-title">Token Count</span>
+              <span class="metric-val" id="feat-tokens">0</span>
+              <div class="progress-track"><div class="progress-fill" id="fill-tokens" style="width: 0%"></div></div>
+            </div>
+            <div class="metric-card">
+              <span class="metric-title">Code Block Ratio</span>
+              <span class="metric-val" id="feat-code-ratio">0.00</span>
+              <div class="progress-track"><div class="progress-fill fill-accent" id="fill-code-ratio" style="width: 0%"></div></div>
+            </div>
+            <div class="metric-card">
+              <span class="metric-title">Multi-Step Markers</span>
+              <span class="metric-val" id="feat-multi-step">0</span>
+              <div class="progress-track"><div class="progress-fill" id="fill-multi-step" style="width: 0%"></div></div>
+            </div>
+            <div class="metric-card">
+              <span class="metric-title">Instruction Verbs</span>
+              <span class="metric-val" id="feat-verbs">0</span>
+              <div class="progress-track"><div class="progress-fill" id="fill-verbs" style="width: 0%"></div></div>
+            </div>
+            <div class="metric-card">
+              <span class="metric-title">Domain Lexicon</span>
+              <span class="metric-val font-mono" id="feat-domain">general</span>
+              <span class="metric-sub" id="feat-domain-ratio">Ratio: 0.00</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-title">Classifier Confidence</span>
+              <span class="metric-val font-mono" id="feat-confidence">0.50</span>
+              <div class="progress-track"><div class="progress-fill fill-success" id="fill-confidence" style="width: 50%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Reputation EMA Matrix -->
+        <div class="tab-content" id="tab-reputation">
+          <div class="tab-intro">
+            Live EMA reputation per bucket (<code>new = 0.3 * s + 0.7 * old</code>). Bumps trigger when score &lt; 0.30:
+          </div>
+          <div class="table-container">
+            <table class="data-table" id="table-reputation">
+              <thead>
+                <tr>
+                  <th>Bucket Key</th>
+                  <th>Tier</th>
+                  <th>EMA Score</th>
+                  <th>Calls</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-reputation">
+                <tr><td colspan="5" class="empty-cell">Loading reputation state...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-footer-actions">
+            <button id="btn-reset-reputation" class="btn-subtle-danger">Reset Learned Weights</button>
+          </div>
+        </div>
+
+        <!-- Tab 3: Privacy & SQLite WAL Audit -->
+        <div class="tab-content" id="tab-privacy">
+          <div class="tab-intro">
+            Privacy Verification: Proves full prompts are never stored—only SHA-256 hashes:
+          </div>
+          <div class="table-container">
+            <table class="data-table font-mono" id="table-decisions">
+              <thead>
+                <tr>
+                  <th>SHA-256 Prompt Hash</th>
+                  <th>Preview</th>
+                  <th>Model Used</th>
+                  <th>Latency</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-decisions">
+                <tr><td colspan="4" class="empty-cell">No decisions recorded yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab 4: Live Terminal Stream -->
+        <div class="tab-content" id="tab-terminal">
+          <div class="terminal-container">
+            <div class="terminal-bar">
+              <div class="terminal-dots">
+                <span></span><span></span><span></span>
+              </div>
+              <span class="terminal-title">system_events.log</span>
+              <button id="btn-clear-terminal" class="btn-terminal-clear">Clear</button>
+            </div>
+            <div class="terminal-body font-mono" id="terminal-output">
+              <div class="log-line log-info">[09:50:01] [SYSTEM] SmartRoute kernel initialized in-process.</div>
+              <div class="log-line log-info">[09:50:01] [STORAGE] SQLite WAL connection active at .smartroute/db.sqlite.</div>
+              <div class="log-line log-info">[09:50:01] [ENGINE] Precedence hierarchy loaded: 4 levels active.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
