@@ -38,6 +38,7 @@ class OpenAIProvider(BaseProvider):
         client: httpx.AsyncClient | None = None,
         default_base_url: str = DEFAULT_OPENAI_BASE_URL,
         provider_prefix: str = "openai",
+        system_prompt: str | None = None,
     ) -> None:
         """Initialize OpenAI provider.
 
@@ -46,11 +47,13 @@ class OpenAIProvider(BaseProvider):
             client: Optional injected httpx.AsyncClient.
             default_base_url: Default API base URL if not set in config.
             provider_prefix: Prefix used for model names (default 'openai').
+            system_prompt: Optional default system prompt for model steering.
         """
         super().__init__(config, client=client)
         base = config.base_url or default_base_url
         self.base_url = base.rstrip("/")
         self.provider_prefix = provider_prefix
+        self.system_prompt = system_prompt
 
     def _headers(self) -> dict[str, str]:
         """Build standard authorization and content headers."""
@@ -75,9 +78,14 @@ class OpenAIProvider(BaseProvider):
         client = self._get_client()
         url = f"{self.base_url}/chat/completions"
         resolved_model = _clean_model(model, self.provider_prefix)
+        messages: list[dict[str, str]] = []
+        if self.system_prompt:
+            messages.append({"role": "system", "content": self.system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
         payload = {
             "model": resolved_model,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": messages,
         }
         try:
             response = await client.post(url, json=payload, headers=self._headers())
@@ -116,9 +124,14 @@ class OpenAIProvider(BaseProvider):
         client = self._get_client()
         url = f"{self.base_url}/chat/completions"
         resolved_model = _clean_model(model, self.provider_prefix)
+        messages: list[dict[str, str]] = []
+        if self.system_prompt:
+            messages.append({"role": "system", "content": self.system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
         payload = {
             "model": resolved_model,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": messages,
             "stream": True,
         }
 

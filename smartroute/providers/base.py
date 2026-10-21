@@ -6,6 +6,7 @@ provider adapters (OpenAI, Anthropic, Groq) implement.
 
 from __future__ import annotations
 
+import asyncio
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
 
@@ -37,14 +38,26 @@ class BaseProvider(ABC):
         """
         self.config = config
         self._client = client
+        self._attached_loop: asyncio.AbstractEventLoop | None = None
 
     def _get_client(self) -> httpx.AsyncClient:
         """Return or lazily create the httpx.AsyncClient instance."""
-        if self._client is None or self._client.is_closed:
+        try:
+            curr_loop = asyncio.get_running_loop()
+        except RuntimeError:
+            curr_loop = None
+
+        if (
+            self._client is None
+            or self._client.is_closed
+            or (self._attached_loop is not None and self._attached_loop != curr_loop)
+            or (self._attached_loop is not None and self._attached_loop.is_closed())
+        ):
             self._client = httpx.AsyncClient(
                 timeout=float(self.config.timeout),
                 transport=httpx.AsyncHTTPTransport(retries=self.config.max_retries),
             )
+            self._attached_loop = curr_loop
         return self._client
 
     async def close(self) -> None:

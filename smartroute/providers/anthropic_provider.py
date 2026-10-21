@@ -38,6 +38,7 @@ class AnthropicProvider(BaseProvider):
         config: ProviderConfig,
         client: httpx.AsyncClient | None = None,
         default_base_url: str = DEFAULT_ANTHROPIC_BASE_URL,
+        system_prompt: str | None = None,
     ) -> None:
         """Initialize Anthropic provider.
 
@@ -45,10 +46,12 @@ class AnthropicProvider(BaseProvider):
             config: Provider configuration.
             client: Optional injected httpx.AsyncClient.
             default_base_url: Default API base URL if not set in config.
+            system_prompt: Optional default system prompt for model steering.
         """
         super().__init__(config, client=client)
         base = config.base_url or default_base_url
         self.base_url = base.rstrip("/")
+        self.system_prompt = system_prompt
 
     def _headers(self) -> dict[str, str]:
         """Build Anthropic headers with API key and version."""
@@ -74,11 +77,13 @@ class AnthropicProvider(BaseProvider):
         client = self._get_client()
         url = f"{self.base_url}/messages"
         resolved_model = _clean_model(model)
-        payload = {
+        payload: dict[str, Any] = {
             "model": resolved_model,
             "max_tokens": DEFAULT_MAX_TOKENS,
             "messages": [{"role": "user", "content": prompt}],
         }
+        if self.system_prompt:
+            payload["system"] = self.system_prompt
 
         try:
             response = await client.post(url, json=payload, headers=self._headers())
@@ -123,12 +128,14 @@ class AnthropicProvider(BaseProvider):
         client = self._get_client()
         url = f"{self.base_url}/messages"
         resolved_model = _clean_model(model)
-        payload = {
+        payload: dict[str, Any] = {
             "model": resolved_model,
             "max_tokens": DEFAULT_MAX_TOKENS,
             "messages": [{"role": "user", "content": prompt}],
             "stream": True,
         }
+        if self.system_prompt:
+            payload["system"] = self.system_prompt
 
         try:
             async with client.stream(
