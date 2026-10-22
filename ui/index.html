@@ -2,532 +2,291 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SmartRoute — In-Process Adaptive LLM Prompt Router & Profiler</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartRoute — Intelligent LLM Prompt Router</title>
   
   <!-- Modern Typography (Inter & JetBrains Mono) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="theme-obsidian">
+<body class="theme-clean">
 
-  <!-- Application Masthead -->
-  <header class="app-masthead">
-    <div class="masthead-left">
-      <div class="brand-cluster">
-        <div class="brand-symbol">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="16 18 22 12 16 6"></polyline>
             <polyline points="8 6 2 12 8 18"></polyline>
           </svg>
         </div>
-        <div class="brand-meta">
-          <div class="brand-title-row">
-            <span class="brand-name">SmartRoute</span>
-            <span class="release-tag">v0.1.0</span>
-          </div>
-          <span class="brand-sub">In-Process Adaptive LLM Router</span>
+        <div>
+          <div class="brand-title">SmartRoute <span class="version-pill">v0.1</span></div>
+          <div class="brand-tagline">Intelligent Prompt Router for Large Language Models</div>
         </div>
       </div>
 
-      <div class="kernel-status-pill">
-        <span class="beacon-pulse"></span>
-        <span class="pill-text font-mono">SQLite WAL Engine · Zero Telemetry Leakage</span>
+      <div class="header-stats">
+        <div class="stat-badge">
+          <span class="stat-icon">⚡</span>
+          <div>
+            <div class="stat-value text-emerald" id="hdr-routing-time">&lt; 3ms</div>
+            <div class="stat-label">Decision Time</div>
+          </div>
+        </div>
+        <div class="stat-badge">
+          <span class="stat-icon">💰</span>
+          <div>
+            <div class="stat-value text-indigo">~85%</div>
+            <div class="stat-label">Cost Saved vs GPT-4o</div>
+          </div>
+        </div>
       </div>
-    </div>
-
-    <!-- Center Architecture HUD -->
-    <div class="masthead-center">
-      <div class="arch-badge font-mono">
-        <span class="arch-tag">ARCH</span>
-        <span>In-Process Library (<strong class="text-emerald">&lt;4.2ms</strong> Overhead)</span>
-      </div>
-    </div>
-
-    <!-- Live Telemetry Deck -->
-    <div class="telemetry-deck">
-      <div class="telemetry-card">
-        <span class="telemetry-label">Queries Evaluated</span>
-        <span class="telemetry-value font-mono" id="stat-total-decisions">--</span>
-      </div>
-      <div class="deck-divider"></div>
-      <div class="telemetry-card">
-        <span class="telemetry-label">Classifier Latency</span>
-        <span class="telemetry-value font-mono text-emerald" id="stat-mean-overhead">&lt; 3.8ms</span>
-      </div>
-      <div class="deck-divider"></div>
-      <div class="telemetry-card">
-        <span class="telemetry-label">Cost Efficiency vs GPT-4o</span>
-        <span class="telemetry-value font-mono text-indigo" id="stat-cost-efficiency">82.4% Saved</span>
-      </div>
-      <div class="deck-divider"></div>
-      <button id="btn-sync-telemetry" class="btn-ghost-icon" title="Synchronize state with local SQLite WAL">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
-        </svg>
-      </button>
     </div>
   </header>
 
-  <!-- Main 3-Column Studio Workspace -->
-  <main class="studio-layout">
+  <!-- Main Content -->
+  <main class="main-container">
 
-    <!-- Column 1: Prompt Workbench & Scenarios (Left) -->
-    <aside class="studio-sidebar">
-      <div class="sidebar-header">
-        <div class="header-title-wrap">
-          <span class="section-heading">Query Studio</span>
-          <span class="section-tagline">Systems Evaluation</span>
-        </div>
-        <kbd class="hotkey-pill font-mono">⌘ + ↵</kbd>
-      </div>
-
-      <div class="sidebar-scrollable">
-        <!-- Curated Systems Engineering Scenarios -->
-        <div class="field-block">
-          <div class="field-label-row">
-            <span class="field-label">Production Benchmarks</span>
-            <span class="field-sub">Click to load</span>
-          </div>
-          <div class="scenario-deck">
-            <div class="scenario-card active" data-scenario="distributed">
-              <div class="card-header-row">
-                <span class="scenario-badge badge-code">Code / High</span>
-                <span class="scenario-latency font-mono">&lt; 4.2ms</span>
-              </div>
-              <div class="scenario-title">Distributed Redis Mutex</div>
-              <div class="scenario-snippet font-mono">TTL lease renewal & fencing tokens</div>
-            </div>
-
-            <div class="scenario-card" data-scenario="database">
-              <div class="card-header-row">
-                <span class="scenario-badge badge-reasoning">Reasoning</span>
-                <span class="scenario-latency font-mono">&lt; 3.9ms</span>
-              </div>
-              <div class="scenario-title">LSM-Tree vs B+Tree</div>
-              <div class="scenario-snippet font-mono">Write amplification & compactions</div>
-            </div>
-
-            <div class="scenario-card" data-scenario="ringbuffer">
-              <div class="card-header-row">
-                <span class="scenario-badge badge-low">Concurrency</span>
-                <span class="scenario-latency font-mono">&lt; 3.5ms</span>
-              </div>
-              <div class="scenario-title">Lock-Free Ring Buffer</div>
-              <div class="scenario-snippet font-mono">SPSC queue with atomic memory barriers</div>
-            </div>
-
-            <div class="scenario-card" data-scenario="incident">
-              <div class="card-header-row">
-                <span class="scenario-badge badge-override">P0 Override</span>
-                <span class="scenario-latency font-mono">&lt; 1.0ms</span>
-              </div>
-              <div class="scenario-title">Kafka Rebalance Storm</div>
-              <div class="scenario-snippet font-mono">Consumer group lag mitigation</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Query Input Block -->
-        <div class="field-block">
-          <div class="field-label-row">
-            <span class="field-label">Active Prompt Payload</span>
-            <span class="counter-tag font-mono" id="char-token-counter">0 chars | ~0 tokens</span>
-          </div>
-          <div class="editor-frame">
-            <textarea id="prompt-input" rows="7" class="code-textarea font-mono" spellcheck="false" placeholder="Enter prompt to evaluate in-process routing..."></textarea>
-          </div>
-        </div>
-
-        <!-- Control Switches -->
-        <div class="field-block">
-          <span class="field-label">Routing Controls</span>
-          <div class="switch-row">
-            <label class="switch-container">
-              <input type="checkbox" id="toggle-override-hook">
-              <span class="switch-slider"></span>
-            </label>
-            <div class="switch-text">
-              <span class="switch-title">Level 1: Enterprise Override Hook</span>
-              <span class="switch-desc">Bypass ML heuristics with deterministic policy</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Action Strip -->
-        <div class="action-strip">
-          <button id="btn-dispatch-stream" class="btn-action btn-dispatch">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
-            <span>Dispatch Query</span>
-            <kbd class="btn-kbd font-mono">↵</kbd>
-          </button>
-          <button id="btn-clear-prompt" class="btn-action btn-secondary">Clear</button>
-        </div>
-
-        <!-- Live Adaptive Feedback Signal Injector -->
-        <div class="feedback-simulator-deck">
-          <div class="deck-header">
-            <div class="deck-title-group">
-              <span class="deck-title">Adaptive Feedback Deck</span>
-              <span class="deck-sub">Inject behavioral signals to trigger live EMA updates</span>
-            </div>
-          </div>
-          <div class="formula-box font-mono">
-            EMA<sub>t</sub> = 0.3 · S + 0.7 · EMA<sub>t-1</sub>
-          </div>
-          <div class="signal-buttons-grid">
-            <button id="btn-signal-regen" class="signal-button signal-danger" title="Simulate re-sending the same query within 30s">
-              <span class="sig-val font-mono">-0.30</span>
-              <span class="sig-name">Hard Regen</span>
-            </button>
-            <button id="btn-signal-correction" class="signal-button signal-warning" title="Simulate negative correction: 'that is wrong, fix it'">
-              <span class="sig-val font-mono">-0.20</span>
-              <span class="sig-name">Correction</span>
-            </button>
-            <button id="btn-signal-accept" class="signal-button signal-success" title="Simulate conversational turn continuation">
-              <span class="sig-val font-mono">+0.05</span>
-              <span class="sig-name">Acceptance</span>
-            </button>
-          </div>
-          <div id="signal-toast" class="signal-toast hidden font-mono"></div>
-        </div>
-
-      </div>
-    </aside>
-
-    <!-- Column 2: Studio Execution Canvas & Response Viewer (Center) -->
-    <section class="studio-canvas">
-      
-      <!-- Top Stage: Execution Waterfall & Telemetry Bar -->
-      <div class="canvas-waterfall-bar">
-        <div class="waterfall-step" id="wf-step-1">
-          <span class="wf-index font-mono">01</span>
-          <div class="wf-info">
-            <span class="wf-title">Classifier</span>
-            <span class="wf-metric font-mono" id="wf-metric-classify">-- ms</span>
-          </div>
-        </div>
-        <div class="wf-arrow">→</div>
-
-        <div class="waterfall-step" id="wf-step-2">
-          <span class="wf-index font-mono">02</span>
-          <div class="wf-info">
-            <span class="wf-title">4-Tier Hierarchy</span>
-            <span class="wf-metric font-mono" id="wf-metric-hierarchy">-- ms</span>
-          </div>
-        </div>
-        <div class="wf-arrow">→</div>
-
-        <div class="waterfall-step" id="wf-step-3">
-          <span class="wf-index font-mono">03</span>
-          <div class="wf-info">
-            <span class="wf-title">TTFT</span>
-            <span class="wf-metric font-mono" id="wf-metric-ttft">-- ms</span>
-          </div>
-        </div>
-        <div class="wf-arrow">→</div>
-
-        <div class="waterfall-step" id="wf-step-4">
-          <span class="wf-index font-mono">04</span>
-          <div class="wf-info">
-            <span class="wf-title">SQLite Commit</span>
-            <span class="wf-metric font-mono" id="wf-metric-wal">-- ms</span>
-          </div>
-        </div>
-
-        <div class="wf-speed-badge font-mono" id="wf-speed-badge">
-          <span class="dot-beacon"></span>
-          <span id="live-speed-text">Ready</span>
-        </div>
-      </div>
-
-      <!-- Decision Rationale Strip -->
-      <div class="decision-spec-strip">
-        <div class="spec-cell">
-          <span class="spec-label">Assigned Model</span>
-          <span class="spec-value font-mono text-indigo" id="spec-model">None</span>
-        </div>
-        <div class="spec-cell">
-          <span class="spec-label">Task Type & Bucket</span>
-          <span class="spec-value font-mono" id="spec-task-type">--</span>
-        </div>
-        <div class="spec-cell">
-          <span class="spec-label">Complexity Score</span>
-          <span class="spec-value font-mono" id="spec-complexity">--</span>
-        </div>
-        <div class="spec-cell">
-          <span class="spec-label">Execution Latency</span>
-          <span class="spec-value font-mono" id="spec-latency">-- ms</span>
-        </div>
-        <div class="spec-cell">
-          <span class="spec-label">Estimated Cost</span>
-          <span class="spec-value font-mono" id="spec-cost">$0.000000</span>
-        </div>
-      </div>
-
-      <!-- Human-Readable Routing Rationale Banner -->
-      <div class="rationale-callout font-mono">
-        <span class="callout-tag">RATIONALE</span>
-        <span class="callout-content" id="spec-reason">Select a scenario or enter a prompt. The in-process classifier evaluates complexity in &lt;5ms.</span>
-      </div>
-
-      <!-- Response Output Studio Window -->
-      <div class="output-studio-window">
-        <div class="window-chrome">
-          <div class="window-decorations">
-            <span class="mac-dot dot-close"></span>
-            <span class="mac-dot dot-min"></span>
-            <span class="mac-dot dot-max"></span>
-          </div>
-          
-          <!-- Mode Switcher Tabs -->
-          <div class="window-mode-tabs font-mono">
-            <button class="win-tab active" data-wmode="formatted">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="16 18 22 12 16 6"></polyline>
-                <polyline points="8 6 2 12 8 18"></polyline>
-              </svg>
-              <span>Engineered Output</span>
-            </button>
-            <button class="win-tab" data-wmode="raw">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                <line x1="8" y1="21" x2="16" y2="21"></line>
-                <line x1="12" y1="17" x2="12" y2="21"></line>
-              </svg>
-              <span>Raw Token Stream</span>
-            </button>
-            <button class="win-tab" data-wmode="graph">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="18" cy="5" r="3"></circle>
-                <circle cx="6" cy="12" r="3"></circle>
-                <circle cx="18" cy="19" r="3"></circle>
-                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-              </svg>
-              <span>Routing Cascade</span>
-            </button>
-          </div>
-
-          <div class="window-actions">
-            <button id="btn-copy-output" class="btn-mini-text font-mono">Copy Output</button>
-          </div>
-        </div>
-
-        <!-- Primary Formatted Viewport -->
-        <div class="window-viewport" id="streaming-viewport">
-          <div class="viewport-placeholder">
-            <div class="placeholder-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                <line x1="8" y1="21" x2="16" y2="21"></line>
-                <line x1="12" y1="17" x2="12" y2="21"></line>
-              </svg>
-            </div>
-            <span class="placeholder-primary">Engine Stream Inactive</span>
-            <span class="placeholder-secondary">Press Dispatch Query or hit ⌘+Enter to execute in-process routing & zero-lag streaming</span>
-          </div>
-        </div>
-
-        <!-- Raw Token Stream Viewport (Hidden by default) -->
-        <div class="window-viewport hidden font-mono" id="raw-stream-viewport">
-          <div class="raw-tokens-container" id="raw-tokens-container">
-            <div class="raw-token-line raw-dim">[00:00:00.000] Ready for SSE token ingestion.</div>
-          </div>
-        </div>
-
-        <!-- Routing Decision Cascade Viewport (Hidden by default) -->
-        <div class="window-viewport hidden" id="graph-viewport">
-          <div class="cascade-graph-container">
-            <div class="graph-stage-card" id="graph-stage-override">
-              <div class="graph-card-header">
-                <span class="stage-tag font-mono">LEVEL 1</span>
-                <span class="stage-name">Enterprise Override</span>
-              </div>
-              <div class="stage-desc" id="graph-desc-override">Deterministic policy bypass</div>
-              <span class="stage-status font-mono" id="graph-status-override">PASSED</span>
-            </div>
-
-            <div class="graph-connector">↓</div>
-
-            <div class="graph-stage-card" id="graph-stage-classifier">
-              <div class="graph-card-header">
-                <span class="stage-tag font-mono">LEVEL 2</span>
-                <span class="stage-name">Heuristic Classifier</span>
-              </div>
-              <div class="stage-desc" id="graph-desc-classifier">9-Feature syntactic extraction (&lt;5ms)</div>
-              <span class="stage-status font-mono text-emerald" id="graph-status-classifier">ACTIVE</span>
-            </div>
-
-            <div class="graph-connector">↓</div>
-
-            <div class="graph-stage-card" id="graph-stage-reputation">
-              <div class="graph-card-header">
-                <span class="stage-tag font-mono">LEVEL 3</span>
-                <span class="stage-name">Reputation EMA Matrix</span>
-              </div>
-              <div class="stage-desc" id="graph-desc-reputation">Learned per-bucket reliability filter</div>
-              <span class="stage-status font-mono" id="graph-status-reputation">EVALUATED</span>
-            </div>
-
-            <div class="graph-connector">↓</div>
-
-            <div class="graph-stage-card" id="graph-stage-fallback">
-              <div class="graph-card-header">
-                <span class="stage-tag font-mono">LEVEL 4</span>
-                <span class="stage-name">Circuit-Breaker Fallback</span>
-              </div>
-              <div class="stage-desc" id="graph-desc-fallback">Tier-escalation upon provider failure</div>
-              <span class="stage-status font-mono text-emerald" id="graph-status-fallback">READY</span>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
+    <!-- Hero / Concept Banner -->
+    <section class="concept-banner">
+      <h2>How SmartRoute Works</h2>
+      <p>Why pay top dollar for simple questions? SmartRoute evaluates your prompt in <strong>under 3 milliseconds</strong> and routes it to the most cost-effective model that can answer it accurately.</p>
     </section>
 
-    <!-- Column 3: Engineering Observability Profiler (Right) -->
-    <aside class="studio-profiler">
-      <div class="profiler-tab-bar">
-        <button class="profiler-tab active" data-ptab="radar">Feature Radar</button>
-        <button class="profiler-tab" data-ptab="reputation">Reputation EMA</button>
-        <button class="profiler-tab" data-ptab="privacy">Privacy Audit</button>
-        <button class="profiler-tab" data-ptab="terminal">Kernel Logs</button>
+    <!-- Visual Router Pipeline Diagram -->
+    <section class="visual-pipeline">
+      <div class="pipeline-node node-input" id="node-prompt">
+        <div class="node-icon">💬</div>
+        <div class="node-label">Your Prompt</div>
+        <div class="node-sub" id="pipe-prompt-type">Waiting for input...</div>
       </div>
 
-      <div class="profiler-content-body">
+      <div class="pipeline-connector">
+        <div class="connector-line">
+          <span class="pulse-dot" id="pipe-pulse"></span>
+        </div>
+        <span class="connector-label" id="pipe-speed">&lt; 3ms</span>
+      </div>
+
+      <div class="pipeline-node node-engine" id="node-engine">
+        <div class="node-icon">⚡</div>
+        <div class="node-label">Smart Classifier</div>
+        <div class="node-sub">In-Process Analysis</div>
+      </div>
+
+      <div class="pipeline-connector">
+        <div class="connector-line"></div>
+        <span class="connector-label">Routes to</span>
+      </div>
+
+      <!-- 3 Tier Model Cards -->
+      <div class="pipeline-models">
+        <div class="model-tier-card" id="tier-fast">
+          <div class="tier-header">
+            <span class="tier-dot dot-green"></span>
+            <span class="tier-title">Fast Tier</span>
+            <span class="tier-cost">$0.05 / 1M</span>
+          </div>
+          <div class="tier-model">Llama 3.1 8B</div>
+          <div class="tier-desc">Best for simple questions, summaries, chit-chat</div>
+          <div class="tier-badge" id="badge-fast">Selected</div>
+        </div>
+
+        <div class="model-tier-card" id="tier-code">
+          <div class="tier-header">
+            <span class="tier-dot dot-purple"></span>
+            <span class="tier-title">Code Tier</span>
+            <span class="tier-cost">$0.59 / 1M</span>
+          </div>
+          <div class="tier-model">Llama 3.3 70B</div>
+          <div class="tier-desc">Best for programming, debugging & math</div>
+          <div class="tier-badge" id="badge-code">Selected</div>
+        </div>
+
+        <div class="model-tier-card" id="tier-heavy">
+          <div class="tier-header">
+            <span class="tier-dot dot-blue"></span>
+            <span class="tier-title">Reasoning Tier</span>
+            <span class="tier-cost">$2.50 / 1M</span>
+          </div>
+          <div class="tier-model">GPT-4o / Claude 3.5</div>
+          <div class="tier-desc">Best for complex multi-step analysis</div>
+          <div class="tier-badge" id="badge-heavy">Selected</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Prompt Box -->
+    <section class="prompt-section">
+      <div class="section-label">Try an example or type your own:</div>
+      
+      <!-- Preset Pills -->
+      <div class="presets-row">
+        <button class="preset-pill active" data-preset="simple">
+          <span class="pill-emoji">🟢</span>
+          <span class="pill-text"><strong>Simple:</strong> What is the capital of France?</span>
+          <span class="pill-route">Routes to Fast Tier</span>
+        </button>
+
+        <button class="preset-pill" data-preset="code">
+          <span class="pill-emoji">🟣</span>
+          <span class="pill-text"><strong>Coding:</strong> Write a Python function for palindrome check</span>
+          <span class="pill-route">Routes to Code Tier</span>
+        </button>
+
+        <button class="preset-pill" data-preset="reasoning">
+          <span class="pill-emoji">🔵</span>
+          <span class="pill-text"><strong>Reasoning:</strong> Compare B-Tree vs LSM-Tree for write workloads</span>
+          <span class="pill-route">Routes to Reasoning Tier</span>
+        </button>
+      </div>
+
+      <!-- Textarea & Action -->
+      <div class="input-card">
+        <textarea id="prompt-input" rows="3" placeholder="Type any question or prompt here to see where SmartRoute sends it..."></textarea>
         
-        <!-- Tab 1: Feature Vector Radar (Syntactic Cues) -->
-        <div class="ptab-panel active" id="ptab-radar">
-          <div class="ptab-header-note">
-            <span>Deterministic 9-feature extraction completed in </span>
-            <strong class="font-mono text-emerald" id="feat-extract-time">&lt; 3.8ms</strong>
-            <span> without external LLM calls.</span>
+        <div class="input-footer">
+          <div class="input-meta">
+            <span id="char-counter">0 characters</span>
+            <span class="meta-separator">·</span>
+            <span id="instant-preview">Estimated Route: <strong class="text-emerald">Fast Tier</strong></span>
           </div>
-          <div class="feature-meters-list">
-            <div class="meter-item">
-              <div class="meter-info">
-                <span class="meter-name">Token Length Band</span>
-                <span class="meter-value font-mono" id="meter-val-tokens">0 tokens</span>
-              </div>
-              <div class="meter-track"><div class="meter-bar" id="meter-bar-tokens" style="width: 0%"></div></div>
-            </div>
 
-            <div class="meter-item">
-              <div class="meter-info">
-                <span class="meter-name">Code Syntax Density</span>
-                <span class="meter-value font-mono" id="meter-val-code">0.00</span>
-              </div>
-              <div class="meter-track"><div class="meter-bar bar-indigo" id="meter-bar-code" style="width: 0%"></div></div>
-            </div>
-
-            <div class="meter-item">
-              <div class="meter-info">
-                <span class="meter-name">Sequential Reasoning Markers</span>
-                <span class="meter-value font-mono" id="meter-val-multistep">0 markers</span>
-              </div>
-              <div class="meter-track"><div class="meter-bar" id="meter-bar-multistep" style="width: 0%"></div></div>
-            </div>
-
-            <div class="meter-item">
-              <div class="meter-info">
-                <span class="meter-name">Instruction Verb Density</span>
-                <span class="meter-value font-mono" id="meter-val-verbs">0 verbs</span>
-              </div>
-              <div class="meter-track"><div class="meter-bar" id="meter-bar-verbs" style="width: 0%"></div></div>
-            </div>
-
-            <div class="meter-item">
-              <div class="meter-info">
-                <span class="meter-name">Domain Lexicon Match</span>
-                <span class="meter-value font-mono text-indigo" id="meter-val-domain">general</span>
-              </div>
-              <div class="meter-track"><div class="meter-bar bar-emerald" id="meter-bar-domain" style="width: 10%"></div></div>
-            </div>
-
-            <div class="meter-item">
-              <div class="meter-info">
-                <span class="meter-name">Classifier Confidence</span>
-                <span class="meter-value font-mono" id="meter-val-confidence">0.50</span>
-              </div>
-              <div class="meter-track"><div class="meter-bar bar-emerald" id="meter-bar-confidence" style="width: 50%"></div></div>
-            </div>
-          </div>
+          <button id="btn-dispatch" class="btn-primary">
+            <span>Route & Run</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          </button>
         </div>
-
-        <!-- Tab 2: Reputation EMA Matrix & Topology -->
-        <div class="ptab-panel" id="ptab-reputation">
-          <div class="ptab-header-note">
-            <span>Per-bucket Exponential Moving Average. Scores below </span>
-            <strong class="font-mono text-danger">0.30</strong>
-            <span> trigger tier auto-escalation.</span>
-          </div>
-          <div class="styled-table-frame">
-            <table class="profiler-table font-mono" id="tbl-reputation">
-              <thead>
-                <tr>
-                  <th>Bucket</th>
-                  <th>Tier</th>
-                  <th>EMA</th>
-                  <th>Calls</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-reputation">
-                <tr><td colspan="5" class="empty-row">Synchronizing with SQLite WAL...</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="panel-action-footer">
-            <button id="btn-reset-weights" class="btn-danger-outline font-mono">Reset Learned Weights</button>
-          </div>
-        </div>
-
-        <!-- Tab 3: Privacy & SQLite WAL Audit -->
-        <div class="ptab-panel" id="ptab-privacy">
-          <div class="ptab-header-note">
-            <span>Zero-Leakage Contract: Full prompt text is <strong>never written to disk</strong>. Only cryptographic SHA-256 digests are stored in the WAL:</span>
-          </div>
-          <div class="styled-table-frame">
-            <table class="profiler-table font-mono" id="tbl-privacy">
-              <thead>
-                <tr>
-                  <th>SHA-256 Digest</th>
-                  <th>Preview (100c)</th>
-                  <th>Model</th>
-                  <th>Latency</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-decisions">
-                <tr><td colspan="4" class="empty-row">No database records logged yet.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Tab 4: Kernel Event Stream -->
-        <div class="ptab-panel" id="ptab-terminal">
-          <div class="kernel-terminal-frame font-mono">
-            <div class="terminal-controls-row">
-              <span class="terminal-label">/var/log/smartroute.kernel</span>
-              <button id="btn-clear-logs" class="btn-terminal-action">Flush</button>
-            </div>
-            <div class="terminal-lines" id="kernel-log-lines">
-              <div class="kline kline-sys">[00:00:01] [KERNEL] SmartRoute runtime initialized in-process.</div>
-              <div class="kline kline-sys">[00:00:01] [SQLITE] PRAGMA journal_mode=WAL active (busy_timeout=5000).</div>
-              <div class="kline kline-info">[00:00:01] [CLASSIFIER] Single-pass tokenizer loaded. Overhead: 3.4ms.</div>
-            </div>
-          </div>
-        </div>
-
       </div>
-    </aside>
+    </section>
+
+    <!-- Response & Explanation Section -->
+    <section class="response-section" id="response-container">
+      <div class="response-card">
+        <!-- Live Decision Banner -->
+        <div class="decision-banner" id="decision-banner">
+          <div class="decision-left">
+            <div class="decision-status-pill" id="decision-pill">
+              <span class="status-dot"></span>
+              <span id="decision-tier-name">Ready for query</span>
+            </div>
+            <div class="decision-reason" id="decision-reason">
+              Select an example above or type a prompt, then click <strong>Route & Run</strong>.
+            </div>
+          </div>
+          
+          <div class="decision-metrics">
+            <div class="metric-item">
+              <span class="metric-label">Routing Overhead</span>
+              <span class="metric-val text-emerald" id="res-overhead">--</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Assigned Model</span>
+              <span class="metric-val" id="res-model">--</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Estimated Cost</span>
+              <span class="metric-val text-indigo" id="res-cost">$0.0000</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Output Text / Stream -->
+        <div class="output-viewport" id="output-viewport">
+          <div class="empty-state">
+            <div class="empty-icon">💡</div>
+            <div class="empty-title">Ready to Route</div>
+            <div class="empty-desc">Click "Route & Run" above to see SmartRoute analyze the prompt in 2ms and stream the answer from the chosen model.</div>
+          </div>
+        </div>
+
+        <!-- Feedback & Response Actions -->
+        <div class="response-footer">
+          <div class="feedback-group">
+            <span class="feedback-label">How was this answer?</span>
+            <button class="btn-feedback btn-good" id="btn-good" title="Model answered well - reinforces its reputation">
+              👍 Good (+0.05)
+            </button>
+            <button class="btn-feedback btn-bad" id="btn-bad" title="Model was inadequate - lowers reputation and auto-escalates next time">
+              👎 Needed better model (-0.20)
+            </button>
+            <span class="feedback-toast hidden" id="feedback-toast">Reputation updated!</span>
+          </div>
+
+          <button class="btn-secondary" id="btn-copy">
+            Copy Answer
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Under The Hood / Technical Details (Clean Collapsible Accordion!) -->
+    <section class="technical-section">
+      <button class="tech-toggle-btn" id="btn-tech-toggle">
+        <div class="toggle-left">
+          <span class="toggle-icon">⚙️</span>
+          <span><strong>Under The Hood:</strong> Technical Architecture & Live Database Audit</span>
+        </div>
+        <span class="toggle-arrow" id="toggle-arrow">▾</span>
+      </button>
+
+      <div class="tech-drawer hidden" id="tech-drawer">
+        <div class="tech-grid">
+          <!-- Card 1: Feature Extraction -->
+          <div class="tech-card">
+            <div class="tech-card-title">1. Deterministic Heuristic Analysis (&lt;3ms)</div>
+            <p class="tech-card-sub">Extracts 9 syntactic features in-process without any external LLM calls:</p>
+            <div class="features-list">
+              <div class="feature-row">
+                <span>Code Block & Syntax Ratio:</span>
+                <strong id="tech-feat-code">0.00</strong>
+              </div>
+              <div class="feature-row">
+                <span>Reasoning & Multi-Step Cues:</span>
+                <strong id="tech-feat-reasoning">0 markers</strong>
+              </div>
+              <div class="feature-row">
+                <span>Domain Match:</span>
+                <strong id="tech-feat-domain">general</strong>
+              </div>
+              <div class="feature-row">
+                <span>Calculated Complexity Score:</span>
+                <strong class="text-indigo" id="tech-feat-complexity">0.00 / 1.00</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Adaptive EMA Learning -->
+          <div class="tech-card">
+            <div class="tech-card-title">2. Adaptive Reputation (EMA Algorithm)</div>
+            <p class="tech-card-sub">If a model produces low quality, its score drops and future queries automatically escalate:</p>
+            <div class="formula-display font-mono">
+              EMA<sub>new</sub> = 0.3 · Signal + 0.7 · EMA<sub>old</sub>
+            </div>
+            <div class="reputation-summary">
+              <span>Threshold for Auto-Escalation: <strong>&lt; 0.30</strong></span>
+              <span>Storage Engine: <strong>SQLite WAL Mode</strong></span>
+            </div>
+          </div>
+
+          <!-- Card 3: Zero-Leakage Privacy Contract -->
+          <div class="tech-card">
+            <div class="tech-card-title">3. Zero-Leakage Privacy Contract</div>
+            <p class="tech-card-sub">Your prompt text is never saved to disk. Only cryptographic SHA-256 digests are logged:</p>
+            <div class="privacy-box font-mono" id="tech-sha-display">
+              SHA-256: [Run a query to inspect live hash]
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
   </main>
 
